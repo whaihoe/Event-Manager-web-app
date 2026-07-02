@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Calorie Tracker</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  >
+</head>
+
+<body>
+
+<%- include("partials/navbar") %>
+
+<div class="container py-5">
+
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold">Calorie Tracker</h1>
+
+    <p class="lead text-muted">
+      Track your meals, calories and daily progress easily.
+    </p>
+  </div>
+
+  <div class="row g-4">
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+
+          <h3 class="card-title mb-3">
+            Users
+          </h3>
+
+          <p class="card-text text-muted">
+            Add and manage users for calorie tracking.
+          </p>
+
+          <a href="/users/add-user" class="btn btn-dark">
+            Add User
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+
+          <h3 class="card-title mb-3">
+            Foods
+          </h3>
+
+          <p class="card-text text-muted">
+            Store food items and their calorie values.
+          </p>
+
+          <a href="/foods" class="btn btn-dark">
+            View Foods
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+
+          <h3 class="card-title mb-3">
+            Meals
+          </h3>
+
+          <p class="card-text text-muted">
+            Track meals and calculate total calories.
+          </p>
+
+          <a href="/meals" class="btn btn-dark">
+            View Meals
+          </a>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
