@@ -6,7 +6,7 @@
 // Set up express, bodyparser and EJS
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 const seedDatabase = require('./seed');
 const session = require("express-session");
 const requireLogin = require("./middleware/auth.js");
@@ -61,4 +61,3 @@ app.use('/auth', authRoutes);
 app.listen(port, () => {
     console.log(`Example app listening on port ${port}`)
 })
-

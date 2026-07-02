@@ -14,10 +14,9 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS email_accounts (
     email_account_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email_address TEXT NOT NULL,
+    email_address TEXT NOT NULL UNIQUE,
     user_id  INT, --the user that the email account belongs to
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 COMMIT;
-
