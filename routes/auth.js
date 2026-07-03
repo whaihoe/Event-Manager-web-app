@@ -11,6 +11,7 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
+const VALID_ROLES = ["organiser", "participant"];
 
 function isValidEmail(emailAddress) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress);
@@ -19,7 +20,8 @@ function isValidEmail(emailAddress) {
 function getFormData(req) {
     return {
         user_name: req.body.user_name || "",
-        email_address: req.body.email_address || ""
+        email_address: req.body.email_address || "",
+        role: req.body.role || "participant"
     };
 }
 
@@ -33,7 +35,11 @@ function renderLogin(res, errors, formData) {
 function renderRegister(res, errors, formData) {
     res.render("auth/register.ejs", {
         errors: errors || {},
-        formData: formData || { user_name: "", email_address: "" }
+        formData: formData || {
+            user_name: "",
+            email_address: "",
+            role: "participant"
+        }
     });
 }
 
@@ -49,8 +55,10 @@ router.get("/register", (req, res) => {
 });
 
 router.post("/register", async function(req, res, next) {
+
     const userName = (req.body.user_name || "").trim();
     const emailAddress = (req.body.email_address || "").trim();
+    const role = req.body.role;
     const password = req.body.password;
     const errors = {};
     const formData = getFormData(req);
@@ -67,6 +75,10 @@ router.post("/register", async function(req, res, next) {
 
     if (!password) {
         errors.password = "Please enter a password";
+    }
+
+    if (!VALID_ROLES.includes(role)) {
+        errors.role = "Please choose a valid role";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -90,8 +102,8 @@ router.post("/register", async function(req, res, next) {
             const passwordHash = await bcrypt.hash(password, 10);
 
             global.db.run(
-                "INSERT INTO users (user_name, password_hash) VALUES (?, ?)",
-                [userName, passwordHash],
+                "INSERT INTO users (user_name, role, password_hash) VALUES (?, ?, ?)",
+                [userName, role, passwordHash],
                 function(err) {
                     if (err) {
                         return next(err);
@@ -109,6 +121,7 @@ router.post("/register", async function(req, res, next) {
 
                             req.session.userId = userId;
                             req.session.userName = userName;
+                            req.session.userRole = role;
                             res.redirect("/home");
                         }
                     );
@@ -119,6 +132,7 @@ router.post("/register", async function(req, res, next) {
 });
 
 router.post ("/login", function(req, res, next) {
+
     const emailAddress = (req.body.email_address || "").trim();
     const password = req.body.password;
     const errors = {};
@@ -139,7 +153,7 @@ router.post ("/login", function(req, res, next) {
     }
 
     const query = `
-        SELECT users.user_id, users.user_name, users.password_hash
+        SELECT users.user_id, users.user_name, users.password_hash, users.role
         FROM users
         JOIN email_accounts
         ON users.user_id = email_accounts.user_id
@@ -169,6 +183,7 @@ router.post ("/login", function(req, res, next) {
             } else {
                 req.session.userId = user.user_id;
                 req.session.userName = user.user_name;
+                req.session.userRole = user.role;
 
                 res.redirect("/home");
             }

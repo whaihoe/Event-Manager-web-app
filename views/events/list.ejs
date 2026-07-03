@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"  type="text/css" href="/main.css" />
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <title>Events</title>
+</head>
+<body>
+    <%- include("../partials/navbar") %>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-1">Events</h1>
+                <p class="text-muted mb-0">
+                    <% if (role === "organiser") { %>
+                        Post events for participants to join.
+                    <% } else { %>
+                        View and join available events.
+                    <% } %>
+                </p>
+            </div>
+            <% if (role === "organiser") { %>
+                <a href="/events/new" class="btn btn-primary">Create Event</a>
+            <% } %>
+        </div>
+
+        <% if (events.length === 0) { %>
+            <div class="alert alert-info">
+                No events have been posted yet.
+            </div>
+        <% } %>
+
+        <div class="row g-3">
+            <% events.forEach(function (event) { %>
+                <div class="col-md-6">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h2 class="h4 card-title"><%= event.title %></h2>
+                            <p class="text-muted mb-2">
+                                <%= event.event_date %> at <%= event.location %>
+                            </p>
+                            <p class="mb-2">
+                                <%= event.description || "No description provided." %>
+                            </p>
+                            <p class="small text-muted">
+                                Posted by <%= event.organiser_name %>
+                            </p>
+                            <% if (role === "participant") { %>
+                                <% if (event.joined_user_id) { %>
+                                    <button class="btn btn-outline-success" type="button" disabled>
+                                        Joined
+                                    </button>
+                                <% } else { %>
+                                    <form action="/events/<%= event.event_id %>/join" method="post">
+                                        <button class="btn btn-primary" type="submit">
+                                            Join Event
+                                        </button>
+                                    </form>
+                                <% } %>
+                            <% } %>
+                        </div>
+                    </div>
+                </div>
+            <% }) %>
+        </div>
+    </div>
+</body>
+</html>

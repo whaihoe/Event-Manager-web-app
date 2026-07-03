@@ -20,6 +20,17 @@ app.use(session({
     saveUninitialized: false
 }));
 
+// Store session details so EJS pages can access them
+app.use(function(req, res, next) {
+
+    res.locals.currentUserId = req.session.userId;
+    res.locals.currentUserName = req.session.userName;
+    res.locals.currentUserRole = req.session.userRole;
+
+    next();
+
+});
+
 // Set up SQLite
 // Items in the global namespace are accessible throught out the node application
 const sqlite3 = require('sqlite3').verbose();
@@ -46,7 +57,10 @@ app.get("/", function (req, res) {
 });
 
 app.get("/home", requireLogin, function (req, res) {
-    res.render("index.ejs");
+    res.render("index.ejs", {
+        userName: req.session.userName,
+        role: req.session.userRole
+    });
 });
 
 // Add all the route handlers in usersRoutes to the app under the path /users
@@ -56,6 +70,8 @@ app.use('/users', usersRoutes);
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
+const eventsRoutes = require('./routes/events');
+app.use('/events', eventsRoutes);
 
 // Make the web application listen for HTTP requests
 app.listen(port, () => {

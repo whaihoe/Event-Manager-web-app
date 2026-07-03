@@ -1,5 +1,5 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-  <a class="navbar-brand" href="/">Calorie Tracker</a>
+  <a class="navbar-brand" href="/">Event Manager</a>
 
   <button
     class="navbar-toggler"
@@ -16,21 +16,29 @@
         <a class="nav-link" href="/home">Home</a>
       </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="/users/add-user">Add User</a>
-      </li>
+      <% if (currentUserId) { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/events">Events</a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="/users/list-users">List User</a>
-      </li>
+        <% if (currentUserRole === "organiser") { %>
+          <li class="nav-item">
+            <a class="nav-link" href="/events/new">Create Event</a>
+          </li>
+        <% } %>
 
-      <li class="nav-item">
-        <a class="nav-link" href="/foods">Foods</a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/auth/logout">Logout</a>
+        </li>
+      <% } else { %>
+        <li class="nav-item">
+          <a class="nav-link" href="/auth/login">Login</a>
+        </li>
 
-      <li class="nav-item">
-        <a class="nav-link" href="/auth/logout">Logout</a>
-      </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/auth/register">Register</a>
+        </li>
+      <% } %>
     </ul>
   </div>
 </nav>

@@ -59,6 +59,26 @@
                     </div>
                 <% } %>
             </div>
+            <div class="mb-3">
+                <label for="role" class="form-label">Account role</label>
+                <select
+                    id="role"
+                    class="form-select <%= errors.role ? 'is-invalid' : '' %>"
+                    name="role"
+                >
+                    <option value="participant" <%= formData.role === "participant" ? "selected" : "" %>>
+                        Participant
+                    </option>
+                    <option value="organiser" <%= formData.role === "organiser" ? "selected" : "" %>>
+                        Organiser
+                    </option>
+                </select>
+                <% if (errors.role) { %>
+                    <div class="invalid-feedback">
+                        <%= errors.role %>
+                    </div>
+                <% } %>
+            </div>
             <button type="submit" class="btn btn-primary">Register</button>
             <a href="/auth/login" class="btn btn-link">Already have an account?</a>
         </form>
