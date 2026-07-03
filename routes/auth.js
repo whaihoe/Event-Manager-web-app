@@ -1,8 +1,6 @@
 /**
- * users.js
- * These are example routes for user management
- * This shows how to correctly structure your routes for the project
- * and the suggested pattern for retrieving data by executing queries
+ * auth.js
+ * These routes handle logging in, registering and logging out.
  *
  * NB. it's better NOT to use arrow functions for callbacks with the SQLite library
 * 
@@ -13,10 +11,16 @@ const router = express.Router();
 const bcrypt = require("bcrypt");
 const VALID_ROLES = ["organiser", "participant"];
 
+/**
+ * @desc Checks if the email is in a valid format
+ */
 function isValidEmail(emailAddress) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress);
 }
 
+/**
+ * @desc Keeps the form values after an error
+ */
 function getFormData(req) {
     return {
         user_name: req.body.user_name || "",
@@ -25,6 +29,9 @@ function getFormData(req) {
     };
 }
 
+/**
+ * @desc Renders the login page with any errors
+ */
 function renderLogin(res, errors, formData) {
     res.render("auth/login.ejs", {
         errors: errors || {},
@@ -32,6 +39,9 @@ function renderLogin(res, errors, formData) {
     });
 }
 
+/**
+ * @desc Renders the register page with any errors
+ */
 function renderRegister(res, errors, formData) {
     res.render("auth/register.ejs", {
         errors: errors || {},
@@ -44,16 +54,22 @@ function renderRegister(res, errors, formData) {
 }
 
 /**
- * @desc Displays a page with a form for creating a user record
+ * @desc Displays the login form
  */
 router.get("/login", (req, res) => {
     renderLogin(res);
 });
 
+/**
+ * @desc Displays the register form
+ */
 router.get("/register", (req, res) => {
     renderRegister(res);
 });
 
+/**
+ * @desc Registers a new user account with a role
+ */
 router.post("/register", async function(req, res, next) {
 
     const userName = (req.body.user_name || "").trim();
@@ -85,6 +101,7 @@ router.post("/register", async function(req, res, next) {
         return renderRegister(res, errors, formData);
     }
 
+    // Check if the email is already used
     global.db.get(
         "SELECT email_account_id FROM email_accounts WHERE email_address = ?",
         [emailAddress],
@@ -101,6 +118,7 @@ router.post("/register", async function(req, res, next) {
 
             const passwordHash = await bcrypt.hash(password, 10);
 
+            // Add the user first so I can use the new user_id for the email table
             global.db.run(
                 "INSERT INTO users (user_name, role, password_hash) VALUES (?, ?, ?)",
                 [userName, role, passwordHash],
@@ -111,6 +129,7 @@ router.post("/register", async function(req, res, next) {
 
                     const userId = this.lastID;
 
+                    // Store the email in a separate table linked to this user
                     global.db.run(
                         "INSERT INTO email_accounts (email_address, user_id) VALUES (?, ?)",
                         [emailAddress, userId],
@@ -131,6 +150,9 @@ router.post("/register", async function(req, res, next) {
     );
 });
 
+/**
+ * @desc Logs in a user using email and password
+ */
 router.post ("/login", function(req, res, next) {
 
     const emailAddress = (req.body.email_address || "").trim();
@@ -152,6 +174,7 @@ router.post ("/login", function(req, res, next) {
         return renderLogin(res, errors, formData);
     }
 
+    // Find the user account by email
     const query = `
         SELECT users.user_id, users.user_name, users.password_hash, users.role
         FROM users
@@ -171,6 +194,7 @@ router.post ("/login", function(req, res, next) {
             }, formData);
 
         } else {
+            // Compare the password entered with the hashed password in the database
             const passwordMatch = await bcrypt.compare(
                 password,
                 user.password_hash
@@ -181,6 +205,7 @@ router.post ("/login", function(req, res, next) {
                     password: "Incorrect password"
                 }, formData);
             } else {
+                // Save the logged in user details in the session
                 req.session.userId = user.user_id;
                 req.session.userName = user.user_name;
                 req.session.userRole = user.role;
@@ -191,6 +216,9 @@ router.post ("/login", function(req, res, next) {
     });
 });
 
+/**
+ * @desc Logs the user out and clears the session
+ */
 router.get("/logout", function(req, res) {
 
     req.session.destroy(function(err) {

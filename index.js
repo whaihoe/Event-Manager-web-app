@@ -20,7 +20,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// Store session details so EJS pages can access them
+// Store session details so my EJS pages can access the logged in user
 app.use(function(req, res, next) {
 
     res.locals.currentUserId = req.session.userId;
@@ -57,6 +57,8 @@ app.get("/", function (req, res) {
 });
 
 app.get("/home", requireLogin, function (req, res) {
+
+    // Send the user details to the homepage so it can show the correct dashboard
     res.render("index.ejs", {
         userName: req.session.userName,
         role: req.session.userRole
@@ -70,6 +72,7 @@ app.use('/users', usersRoutes);
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);
 
+// Add all the route handlers in eventsRoutes to the app under the path /events
 const eventsRoutes = require('./routes/events');
 app.use('/events', eventsRoutes);
 

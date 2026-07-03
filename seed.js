@@ -1,6 +1,11 @@
 const bcrypt = require("bcrypt");
 
+/**
+ * @desc Seeds the database with some default users
+ */
 function seedDatabase() {
+
+    // Make sure the database tables exist before adding seed data
     ensureDatabaseSchema(function () {
         global.db.get("SELECT COUNT(*) AS count FROM users", async function (err, row) {
             if (err) {
@@ -63,8 +68,14 @@ function seedDatabase() {
     });
 }
 
+/**
+ * @desc Creates or updates the database tables needed by the app
+ */
 function ensureDatabaseSchema(done) {
+
     global.db.serialize(function () {
+
+        // Create the users table if the database is empty
         global.db.run(`
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -74,6 +85,7 @@ function ensureDatabaseSchema(done) {
             )
         `);
 
+        // Create the email accounts table if the database is empty
         global.db.run(`
             CREATE TABLE IF NOT EXISTS email_accounts (
                 email_account_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -93,6 +105,7 @@ function ensureDatabaseSchema(done) {
                 return column.name === "role";
             });
 
+            // Create the event tables if they do not exist
             function createEventTables(callback) {
                 global.db.serialize(function () {
                     global.db.run(`
@@ -103,6 +116,9 @@ function ensureDatabaseSchema(done) {
                             event_date TEXT NOT NULL,
                             location TEXT NOT NULL,
                             participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0),
+                            status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
+                            published_at TEXT,
+                            updated_at TEXT,
                             organiser_id INTEGER NOT NULL,
                             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (organiser_id) REFERENCES users(user_id)
@@ -122,6 +138,7 @@ function ensureDatabaseSchema(done) {
                 });
             }
 
+            // Add event columns for older databases that were created before these features existed
             function updateEventTable() {
                 global.db.all("PRAGMA table_info(events)", function (err, eventColumns) {
                     if (err) {
@@ -133,17 +150,61 @@ function ensureDatabaseSchema(done) {
                         return column.name === "participant_limit";
                     });
 
+                    const hasStatusColumn = eventColumns.some(function (column) {
+                        return column.name === "status";
+                    });
+
+                    const hasPublishedAtColumn = eventColumns.some(function (column) {
+                        return column.name === "published_at";
+                    });
+
+                    const hasUpdatedAtColumn = eventColumns.some(function (column) {
+                        return column.name === "updated_at";
+                    });
+
+                    const columnsToAdd = [];
+
                     if (!hasParticipantLimitColumn) {
-                        return global.db.run(
-                            "ALTER TABLE events ADD COLUMN participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0)",
-                            done
-                        );
+                        columnsToAdd.push("ALTER TABLE events ADD COLUMN participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0)");
                     }
 
-                    done();
+                    if (!hasStatusColumn) {
+                        columnsToAdd.push("ALTER TABLE events ADD COLUMN status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published'))");
+                    }
+
+                    if (!hasPublishedAtColumn) {
+                        columnsToAdd.push("ALTER TABLE events ADD COLUMN published_at TEXT");
+                    }
+
+                    if (!hasUpdatedAtColumn) {
+                        columnsToAdd.push("ALTER TABLE events ADD COLUMN updated_at TEXT");
+                    }
+
+                    function addNextColumn() {
+
+                        const query = columnsToAdd.shift();
+
+                        if (!query) {
+                            return done();
+                        }
+
+                        global.db.run(query, function(err) {
+
+                            if (err) {
+                                console.log(err);
+                                return done();
+                            }
+
+                            addNextColumn();
+
+                        });
+                    }
+
+                    addNextColumn();
                 });
             }
 
+            // Add role for older databases that were created before roles existed
             if (!hasRoleColumn) {
                 return global.db.run(
                     "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'participant' CHECK(role IN ('organiser', 'participant'))",
