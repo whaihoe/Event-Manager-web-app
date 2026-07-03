@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS events (
     description TEXT,
     event_date TEXT NOT NULL,
     location TEXT NOT NULL,
+    participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0),
     organiser_id INTEGER NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (organiser_id) REFERENCES users(user_id)

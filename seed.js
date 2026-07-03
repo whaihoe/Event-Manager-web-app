@@ -93,7 +93,7 @@ function ensureDatabaseSchema(done) {
                 return column.name === "role";
             });
 
-            function createEventTables() {
+            function createEventTables(callback) {
                 global.db.serialize(function () {
                     global.db.run(`
                         CREATE TABLE IF NOT EXISTS events (
@@ -102,6 +102,7 @@ function ensureDatabaseSchema(done) {
                             description TEXT,
                             event_date TEXT NOT NULL,
                             location TEXT NOT NULL,
+                            participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0),
                             organiser_id INTEGER NOT NULL,
                             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (organiser_id) REFERENCES users(user_id)
@@ -117,18 +118,42 @@ function ensureDatabaseSchema(done) {
                             FOREIGN KEY (event_id) REFERENCES events(event_id),
                             FOREIGN KEY (user_id) REFERENCES users(user_id)
                         )
-                    `, done);
+                    `, callback);
+                });
+            }
+
+            function updateEventTable() {
+                global.db.all("PRAGMA table_info(events)", function (err, eventColumns) {
+                    if (err) {
+                        console.log(err);
+                        return done();
+                    }
+
+                    const hasParticipantLimitColumn = eventColumns.some(function (column) {
+                        return column.name === "participant_limit";
+                    });
+
+                    if (!hasParticipantLimitColumn) {
+                        return global.db.run(
+                            "ALTER TABLE events ADD COLUMN participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0)",
+                            done
+                        );
+                    }
+
+                    done();
                 });
             }
 
             if (!hasRoleColumn) {
                 return global.db.run(
                     "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'participant' CHECK(role IN ('organiser', 'participant'))",
-                    createEventTables
+                    function () {
+                        createEventTables(updateEventTable);
+                    }
                 );
             }
 
-            createEventTables();
+            createEventTables(updateEventTable);
         });
     });
 }

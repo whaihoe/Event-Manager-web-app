@@ -50,10 +50,28 @@
                             <p class="small text-muted">
                                 Posted by <%= event.organiser_name %>
                             </p>
+                            <p class="small text-muted">
+                                Participants:
+                                <%= event.participant_count %>
+                                <% if (event.participant_limit) { %>
+                                    / <%= event.participant_limit %>
+                                <% } else { %>
+                                    / No limit
+                                <% } %>
+                            </p>
+                            <% if (role === "organiser") { %>
+                                <a href="/events/<%= event.event_id %>" class="btn btn-primary">
+                                    Manage Event
+                                </a>
+                            <% } %>
                             <% if (role === "participant") { %>
                                 <% if (event.joined_user_id) { %>
                                     <button class="btn btn-outline-success" type="button" disabled>
                                         Joined
+                                    </button>
+                                <% } else if (event.participant_limit && event.participant_count >= event.participant_limit) { %>
+                                    <button class="btn btn-outline-secondary" type="button" disabled>
+                                        Full
                                     </button>
                                 <% } else { %>
                                     <form action="/events/<%= event.event_id %>/join" method="post">

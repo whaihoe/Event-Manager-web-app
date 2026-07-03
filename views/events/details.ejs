@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"  type="text/css" href="/main.css" />
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
+        rel="stylesheet"
+    >
+    <title>Event Details</title>
+</head>
+<body>
+    <%- include("../partials/navbar") %>
+    <div class="container py-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1><%= event.title %></h1>
+            <a href="/events/<%= event.event_id %>/edit" class="btn btn-primary">
+                Edit Event
+            </a>
+        </div>
+
+        <div class="mb-4">
+            <p><strong>Date:</strong> <%= event.event_date %></p>
+            <p><strong>Location:</strong> <%= event.location %></p>
+            <p>
+                <strong>Participant limit:</strong>
+                <% if (event.participant_limit) { %>
+                    <%= event.participant_limit %>
+                <% } else { %>
+                    No limit
+                <% } %>
+            </p>
+            <p><strong>Current participants:</strong> <%= event.participant_count %></p>
+            <p><strong>Description:</strong></p>
+            <p><%= event.description || "No description provided." %></p>
+        </div>
+
+        <h2>Participants</h2>
+
+        <% if (participants.length === 0) { %>
+            <div class="alert alert-info">
+                No participants have joined this event yet.
+            </div>
+        <% } else { %>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Joined At</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% participants.forEach(function(participant) { %>
+                        <tr>
+                            <td><%= participant.user_name %></td>
+                            <td><%= participant.email_address || "No email found" %></td>
+                            <td><%= participant.joined_at %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+
+        <a href="/events" class="btn btn-link">Back to Events</a>
+    </div>
+</body>
+</html>
