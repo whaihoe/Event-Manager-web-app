@@ -1,0 +1,63 @@
+<% const eventLink = role === "organiser" ? `/events/${event.event_id}/edit` : `/events/${event.event_id}`; %>
+<% const buttonText = role === "organiser" ? actionText : "View Event"; %>
+<% const isSoldOut = Number(event.total_tickets) > 0 && Number(event.total_tickets_sold) >= Number(event.total_tickets); %>
+<% const availableTicketSummary = event.available_ticket_summary ? event.available_ticket_summary.split(",").join(", ") : ""; %>
+<% const purchasedTicketSummary = event.purchased_ticket_summary ? event.purchased_ticket_summary.split(",").join(", ") : ""; %>
+
+<div class="col-md-6">
+    <div class="card h-100 shadow-sm">
+        <div class="card-body">
+            <h3 class="h4 card-title">
+                <a href="<%= eventLink %>" class="stretched-link">
+                    <%= event.title %>
+                </a>
+            </h3>
+            <p class="text-muted mb-2">
+                <%= event.event_date %> at <%= event.location %>
+            </p>
+            <p class="mb-2">
+                <%= event.description || "No description provided." %>
+            </p>
+
+            <% if (role === "participant") { %>
+                <p class="small text-muted">
+                    Posted by <%= event.organiser_name %>
+                </p>
+            <% } %>
+
+            <p class="small text-muted">
+                Created at <%= event.created_at %>
+            </p>
+
+            <% if (event.status === "published") { %>
+                <p class="small text-muted">
+                    Published at <%= event.published_at || "Not recorded" %>
+                </p>
+            <% } %>
+
+            <p class="small text-muted">
+                Tickets: <%= event.ticket_summary || "No tickets added" %>
+            </p>
+
+            <% if (isSoldOut) { %>
+                <p class="small text-danger">
+                    Sold out
+                </p>
+            <% } else if (event.total_tickets) { %>
+                <p class="small text-muted">
+                    Available: <%= availableTicketSummary %>
+                </p>
+            <% } %>
+
+            <% if (role === "participant" && event.purchased_ticket_summary) { %>
+                <p class="small text-success">
+                    Your tickets: <%= purchasedTicketSummary %>
+                </p>
+            <% } %>
+
+            <a href="<%= eventLink %>" class="btn btn-primary">
+                <%= buttonText %>
+            </a>
+        </div>
+    </div>
+</div>

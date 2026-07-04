@@ -1,119 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-    <title>Create Event</title>
-</head>
+<%- include("../partials/head", { title: "Create Event" }) %>
 <body>
     <%- include("../partials/navbar") %>
     <div class="container py-4">
         <h1>Create Event</h1>
         <form action="/events" method="post" novalidate>
-            <div class="mb-3">
-                <label for="title" class="form-label">Title</label>
-                <input
-                    id="title"
-                    class="form-control <%= errors.title ? 'is-invalid' : '' %>"
-                    type="text"
-                    name="title"
-                    value="<%= formData.title || '' %>"
-                />
-                <% if (errors.title) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.title %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mb-3">
-                <label for="description" class="form-label">Description</label>
-                <textarea
-                    id="description"
-                    class="form-control"
-                    name="description"
-                    rows="4"
-                ><%= formData.description || '' %></textarea>
-            </div>
-            <div class="mb-3">
-                <label for="event_date" class="form-label">Date</label>
-                <input
-                    id="event_date"
-                    class="form-control <%= errors.event_date ? 'is-invalid' : '' %>"
-                    type="date"
-                    name="event_date"
-                    value="<%= formData.event_date || '' %>"
-                />
-                <% if (errors.event_date) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.event_date %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mb-3">
-                <label for="location" class="form-label">Location</label>
-                <input
-                    id="location"
-                    class="form-control <%= errors.location ? 'is-invalid' : '' %>"
-                    type="text"
-                    name="location"
-                    value="<%= formData.location || '' %>"
-                />
-                <% if (errors.location) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.location %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="form-check mb-3">
-                <input
-                    id="has_limit"
-                    class="form-check-input"
-                    type="checkbox"
-                    name="has_limit"
-                    <%= formData.has_limit ? "checked" : "" %>
-                />
-                <label for="has_limit" class="form-check-label">
-                    Set participant limit
-                </label>
-            </div>
-            <div id="participant_limit_group" class="mb-3 <%= formData.has_limit ? '' : 'd-none' %>">
-                <label for="participant_limit" class="form-label">Maximum participants</label>
-                <input
-                    id="participant_limit"
-                    class="form-control <%= errors.participant_limit ? 'is-invalid' : '' %>"
-                    type="number"
-                    name="participant_limit"
-                    min="1"
-                    value="<%= formData.participant_limit || '' %>"
-                />
-                <% if (errors.participant_limit) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.participant_limit %>
-                    </div>
-                <% } %>
-            </div>
-            <button type="submit" class="btn btn-primary">Post Event</button>
+            <%- include("partials/event-form-fields", {
+                errors: errors,
+                formData: formData,
+                showTicketIds: false,
+                showSoldCount: false
+            }) %>
+
+            <button type="submit" class="btn btn-primary">Create Event</button>
             <a href="/events" class="btn btn-link">Cancel</a>
         </form>
     </div>
-    <script>
-        const hasLimit = document.getElementById("has_limit");
-        const participantLimitGroup = document.getElementById("participant_limit_group");
-        const participantLimit = document.getElementById("participant_limit");
-
-        hasLimit.addEventListener("change", function() {
-            if (hasLimit.checked) {
-                participantLimitGroup.classList.remove("d-none");
-            } else {
-                participantLimitGroup.classList.add("d-none");
-                participantLimit.value = "";
-            }
-        });
-    </script>
 </body>
 </html>

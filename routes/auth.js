@@ -141,7 +141,11 @@ router.post("/register", async function(req, res, next) {
                             req.session.userId = userId;
                             req.session.userName = userName;
                             req.session.userRole = role;
-                            res.redirect("/home");
+                            if (role === "organiser") {
+                                res.redirect("/organiser/home");
+                            } else {
+                                res.redirect("/attendee/home");
+                            }
                         }
                     );
                 }
@@ -210,7 +214,11 @@ router.post ("/login", function(req, res, next) {
                 req.session.userName = user.user_name;
                 req.session.userRole = user.role;
 
-                res.redirect("/home");
+                if (user.role === "organiser") {
+                    res.redirect("/organiser/home");
+                } else {
+                    res.redirect("/attendee/home");
+                }
             }
         }
     });

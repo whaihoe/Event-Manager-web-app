@@ -50,18 +50,45 @@ app.get("/", function (req, res) {
 
     if (!req.session.userId) {
         res.redirect("/auth/login");
+    } else if (req.session.userRole === "organiser") {
+        res.redirect("/organiser/home");
     } else {
-        res.redirect("/home");
+        res.redirect("/attendee/home");
     }
 
 });
 
 app.get("/home", requireLogin, function (req, res) {
 
-    // Send the user details to the homepage so it can show the correct dashboard
-    res.render("index.ejs", {
-        userName: req.session.userName,
-        role: req.session.userRole
+    if (req.session.userRole === "organiser") {
+        res.redirect("/organiser/home");
+    } else {
+        res.redirect("/attendee/home");
+    }
+
+});
+
+app.get("/organiser/home", requireLogin, function (req, res) {
+
+    if (req.session.userRole !== "organiser") {
+        return res.redirect("/attendee/home");
+    }
+
+    // Send organiser details to the organiser dashboard
+    res.render("organiser-home.ejs", {
+        userName: req.session.userName
+    });
+});
+
+app.get("/attendee/home", requireLogin, function (req, res) {
+
+    if (req.session.userRole !== "participant") {
+        return res.redirect("/organiser/home");
+    }
+
+    // Send attendee details to the attendee dashboard
+    res.render("attendee-home.ejs", {
+        userName: req.session.userName
     });
 });
 

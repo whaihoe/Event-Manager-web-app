@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include("../partials/head", { title: "Purchase Confirmed" }) %>
+<body>
+    <%- include("../partials/navbar") %>
+    <div class="container py-4">
+        <div class="alert alert-success">
+            Your ticket purchase has been confirmed.
+        </div>
+
+        <h1><%= purchase.title %></h1>
+
+        <div class="mb-4">
+            <p><strong>Date:</strong> <%= purchase.event_date %></p>
+            <p><strong>Location:</strong> <%= purchase.location %></p>
+            <p><strong>Organiser:</strong> <%= purchase.organiser_name %></p>
+        </div>
+
+        <h2>Tickets Purchased</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Ticket Type</th>
+                    <th>Quantity</th>
+                    <th>Price Each</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><%= purchase.ticket_type %></td>
+                    <td><%= purchase.quantity %></td>
+                    <td>$<%= purchase.price %></td>
+                    <td>$<%= totalPrice %></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <a href="/events/<%= purchase.event_id %>" class="btn btn-primary">Back to Event</a>
+        <a href="/attendee/home" class="btn btn-link">Attendee Home</a>
+    </div>
+</body>
+</html>

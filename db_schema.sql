@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS events (
     description TEXT,
     event_date TEXT NOT NULL,
     location TEXT NOT NULL,
-    participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0),
     status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
     published_at TEXT,
     updated_at TEXT,
@@ -35,12 +34,33 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (organiser_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS event_tickets (
+    ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL,
+    ticket_type TEXT NOT NULL,
+    quantity_available INTEGER NOT NULL CHECK(quantity_available > 0),
+    price REAL NOT NULL CHECK(price >= 0),
+    FOREIGN KEY (event_id) REFERENCES events(event_id)
+);
+
 CREATE TABLE IF NOT EXISTS event_participants (
     event_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (event_id, user_id),
     FOREIGN KEY (event_id) REFERENCES events(event_id),
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS ticket_purchases (
+    purchase_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id INTEGER NOT NULL,
+    ticket_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK(quantity > 0),
+    purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (event_id) REFERENCES events(event_id),
+    FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 

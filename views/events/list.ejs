@@ -1,15 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet"  type="text/css" href="/main.css" />
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-    >
-    <title>Events</title>
-</head>
+<%- include("../partials/head", { title: "Events" }) %>
 <body>
     <%- include("../partials/navbar") %>
     <div class="container py-4">
@@ -20,7 +11,7 @@
                     <% if (role === "organiser") { %>
                         Manage your draft and published events.
                     <% } else { %>
-                        View and join available published events.
+                        View published events and choose tickets.
                     <% } %>
                 </p>
             </div>
@@ -40,31 +31,11 @@
 
             <div class="row g-3 mb-5">
                 <% draftEvents.forEach(function(event) { %>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h3 class="h4 card-title"><%= event.title %></h3>
-                                <p class="text-muted mb-2">
-                                    <%= event.event_date %> at <%= event.location %>
-                                </p>
-                                <p class="mb-2">
-                                    <%= event.description || "No description provided." %>
-                                </p>
-                                <p class="small text-muted">
-                                    Participants:
-                                    <%= event.participant_count %>
-                                    <% if (event.participant_limit) { %>
-                                        / <%= event.participant_limit %>
-                                    <% } else { %>
-                                        / No limit
-                                    <% } %>
-                                </p>
-                                <a href="/events/<%= event.event_id %>" class="btn btn-primary">
-                                    Manage Draft
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <%- include("partials/event-card", {
+                        event: event,
+                        role: role,
+                        actionText: "Manage Draft"
+                    }) %>
                 <% }) %>
             </div>
 
@@ -78,34 +49,11 @@
 
             <div class="row g-3">
                 <% publishedEvents.forEach(function(event) { %>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h3 class="h4 card-title"><%= event.title %></h3>
-                                <p class="text-muted mb-2">
-                                    <%= event.event_date %> at <%= event.location %>
-                                </p>
-                                <p class="mb-2">
-                                    <%= event.description || "No description provided." %>
-                                </p>
-                                <p class="small text-muted">
-                                    Published at <%= event.published_at || "Not recorded" %>
-                                </p>
-                                <p class="small text-muted">
-                                    Participants:
-                                    <%= event.participant_count %>
-                                    <% if (event.participant_limit) { %>
-                                        / <%= event.participant_limit %>
-                                    <% } else { %>
-                                        / No limit
-                                    <% } %>
-                                </p>
-                                <a href="/events/<%= event.event_id %>" class="btn btn-primary">
-                                    Manage Event
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+                    <%- include("partials/event-card", {
+                        event: event,
+                        role: role,
+                        actionText: "Manage Event"
+                    }) %>
                 <% }) %>
             </div>
         <% } else { %>
@@ -117,46 +65,11 @@
 
             <div class="row g-3">
                 <% events.forEach(function(event) { %>
-                    <div class="col-md-6">
-                        <div class="card h-100 shadow-sm">
-                            <div class="card-body">
-                                <h2 class="h4 card-title"><%= event.title %></h2>
-                                <p class="text-muted mb-2">
-                                    <%= event.event_date %> at <%= event.location %>
-                                </p>
-                                <p class="mb-2">
-                                    <%= event.description || "No description provided." %>
-                                </p>
-                                <p class="small text-muted">
-                                    Posted by <%= event.organiser_name %>
-                                </p>
-                                <p class="small text-muted">
-                                    Participants:
-                                    <%= event.participant_count %>
-                                    <% if (event.participant_limit) { %>
-                                        / <%= event.participant_limit %>
-                                    <% } else { %>
-                                        / No limit
-                                    <% } %>
-                                </p>
-                                <% if (event.joined_user_id) { %>
-                                    <button class="btn btn-outline-success" type="button" disabled>
-                                        Joined
-                                    </button>
-                                <% } else if (event.participant_limit && event.participant_count >= event.participant_limit) { %>
-                                    <button class="btn btn-outline-secondary" type="button" disabled>
-                                        Full
-                                    </button>
-                                <% } else { %>
-                                    <form action="/events/<%= event.event_id %>/join" method="post">
-                                        <button class="btn btn-primary" type="submit">
-                                            Join Event
-                                        </button>
-                                    </form>
-                                <% } %>
-                            </div>
-                        </div>
-                    </div>
+                    <%- include("partials/event-card", {
+                        event: event,
+                        role: role,
+                        actionText: ""
+                    }) %>
                 <% }) %>
             </div>
         <% } %>

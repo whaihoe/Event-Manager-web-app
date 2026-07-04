@@ -115,7 +115,6 @@ function ensureDatabaseSchema(done) {
                             description TEXT,
                             event_date TEXT NOT NULL,
                             location TEXT NOT NULL,
-                            participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0),
                             status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published')),
                             published_at TEXT,
                             updated_at TEXT,
@@ -126,12 +125,37 @@ function ensureDatabaseSchema(done) {
                     `);
 
                     global.db.run(`
+                        CREATE TABLE IF NOT EXISTS event_tickets (
+                            ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_id INTEGER NOT NULL,
+                            ticket_type TEXT NOT NULL,
+                            quantity_available INTEGER NOT NULL CHECK(quantity_available > 0),
+                            price REAL NOT NULL CHECK(price >= 0),
+                            FOREIGN KEY (event_id) REFERENCES events(event_id)
+                        )
+                    `);
+
+                    global.db.run(`
                         CREATE TABLE IF NOT EXISTS event_participants (
                             event_id INTEGER NOT NULL,
                             user_id INTEGER NOT NULL,
                             joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             PRIMARY KEY (event_id, user_id),
                             FOREIGN KEY (event_id) REFERENCES events(event_id),
+                            FOREIGN KEY (user_id) REFERENCES users(user_id)
+                        )
+                    `);
+
+                    global.db.run(`
+                        CREATE TABLE IF NOT EXISTS ticket_purchases (
+                            purchase_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_id INTEGER NOT NULL,
+                            ticket_id INTEGER NOT NULL,
+                            user_id INTEGER NOT NULL,
+                            quantity INTEGER NOT NULL CHECK(quantity > 0),
+                            purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (event_id) REFERENCES events(event_id),
+                            FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id),
                             FOREIGN KEY (user_id) REFERENCES users(user_id)
                         )
                     `, callback);
@@ -146,10 +170,6 @@ function ensureDatabaseSchema(done) {
                         return done();
                     }
 
-                    const hasParticipantLimitColumn = eventColumns.some(function (column) {
-                        return column.name === "participant_limit";
-                    });
-
                     const hasStatusColumn = eventColumns.some(function (column) {
                         return column.name === "status";
                     });
@@ -163,10 +183,6 @@ function ensureDatabaseSchema(done) {
                     });
 
                     const columnsToAdd = [];
-
-                    if (!hasParticipantLimitColumn) {
-                        columnsToAdd.push("ALTER TABLE events ADD COLUMN participant_limit INTEGER CHECK(participant_limit IS NULL OR participant_limit > 0)");
-                    }
 
                     if (!hasStatusColumn) {
                         columnsToAdd.push("ALTER TABLE events ADD COLUMN status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('draft', 'published'))");

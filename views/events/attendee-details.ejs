@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include("../partials/head", { title: "Event Details" }) %>
+<body>
+    <%- include("../partials/navbar") %>
+    <div class="container py-4">
+        <h1><%= event.title %></h1>
+
+        <div class="mb-4">
+            <p><strong>Date:</strong> <%= event.event_date %></p>
+            <p><strong>Location:</strong> <%= event.location %></p>
+            <p><strong>Organiser:</strong> <%= event.organiser_name %></p>
+            <p><strong>Description:</strong></p>
+            <p><%= event.description || "No description provided." %></p>
+        </div>
+
+        <h2>Tickets</h2>
+
+        <% if (errors.tickets) { %>
+            <div class="alert alert-danger">
+                <%= errors.tickets %>
+            </div>
+        <% } %>
+
+        <form action="/events/<%= event.event_id %>/purchase" method="post">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Ticket Type</th>
+                        <th>Price</th>
+                        <th>Available</th>
+                        <th>Your Tickets</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% tickets.forEach(function(ticket) { %>
+                        <% const remainingTickets = ticket.quantity_available - ticket.quantity_sold; %>
+                        <tr>
+                            <td><%= ticket.ticket_type %></td>
+                            <td>$<%= ticket.price %></td>
+                            <td><%= remainingTickets %></td>
+                            <td><%= ticket.quantity_bought || 0 %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <label for="ticket_id" class="form-label">Choose ticket</label>
+                    <select
+                        id="ticket_id"
+                        class="form-select <%= errors.tickets ? 'is-invalid' : '' %>"
+                        name="ticket_id"
+                    >
+                    
+                        <option value="">Select a ticket</option>
+                        <% tickets.forEach(function(ticket) { %>
+                            <% const remainingTickets = ticket.quantity_available - ticket.quantity_sold; %>
+                            <option
+                                value="<%= ticket.ticket_id %>"
+                                data-available="<%= remainingTickets %>"
+                                <% if (formData.ticket_id == ticket.ticket_id) { %>
+                                    selected
+                                <% } %>
+                                <% if (remainingTickets <= 0) { %>
+                                    disabled
+                                <% } %>
+                            >
+                                <%= ticket.ticket_type %> - $<%= ticket.price %> (<%= remainingTickets %> available)
+                            </option>
+                        <% }) %>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="ticket_quantity" class="form-label">Quantity</label>
+                    <input
+                        id="ticket_quantity"
+                        class="form-control <%= errors.tickets ? 'is-invalid' : '' %>"
+                        type="number"
+                        name="ticket_quantity"
+                        min="1"
+                        value="<%= formData.ticket_quantity || 1 %>"
+                    />
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Purchase Tickets</button>
+            <a href="/events" class="btn btn-link">Back</a>
+        </form>
+    </div>
+    <script>
+        const ticketSelect = document.getElementById("ticket_id");
+        const ticketQuantity = document.getElementById("ticket_quantity");
+
+        function updateTicketQuantity() {
+            const selectedOption = ticketSelect.options[ticketSelect.selectedIndex];
+            const availableTickets = selectedOption.dataset.available;
+
+            if (availableTickets) {
+                ticketQuantity.max = availableTickets;
+            } else {
+                ticketQuantity.removeAttribute("max");
+            }
+        }
+
+        ticketSelect.addEventListener("change", updateTicketQuantity);
+        updateTicketQuantity();
+    </script>
+</body>
+</html>

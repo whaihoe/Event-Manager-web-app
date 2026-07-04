@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include("partials/head", { title: "Organiser Dashboard" }) %>
+
+<body>
+<%- include("partials/navbar") %>
+
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold">
+      Organiser Dashboard
+    </h1>
+
+    <p class="lead text-muted">
+      Welcome, <%= userName %>. Create and post events for participants to buy tickets.
+    </p>
+  </div>
+
+  <div class="row g-4 justify-content-center">
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h3 class="card-title mb-3">
+            Create Events
+          </h3>
+
+          <p class="card-text text-muted">
+            Post event details so participants can discover them and buy tickets.
+          </p>
+
+          <a href="/events/new" class="btn btn-dark">
+            Create Event
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h3 class="card-title mb-3">
+            Posted Events
+          </h3>
+
+          <p class="card-text text-muted">
+            Review the events you have posted for participants.
+          </p>
+
+          <a href="/events" class="btn btn-dark">
+            View Events
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h3 class="card-title mb-3">
+            Participants
+          </h3>
+
+          <p class="card-text text-muted">
+            Participants can view your posted events and buy tickets.
+          </p>
+
+          <button class="btn btn-outline-secondary" type="button" disabled>
+            Organiser
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
