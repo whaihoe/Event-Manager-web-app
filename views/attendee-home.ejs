@@ -8,50 +8,34 @@
 <div class="container py-5">
   <div class="text-center mb-5">
     <h1 class="display-4 fw-bold">
-      Attendee Dashboard
+      <%= settings.site_name %>
     </h1>
 
     <p class="lead text-muted">
+      <%= settings.site_description %>
+    </p>
+
+    <p class="text-muted">
       Welcome, <%= userName %>. Browse available events and buy tickets for the ones you are interested in.
     </p>
   </div>
 
-  <div class="row g-4 justify-content-center">
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h3 class="card-title mb-3">
-            Browse Events
-          </h3>
 
-          <p class="card-text text-muted">
-            View published events posted by organisers.
-          </p>
-
-          <a href="/events" class="btn btn-dark">
-            View Events
-          </a>
-        </div>
-      </div>
+  <h2 class="mt-5">Published Events</h2>
+  <% if (events.length === 0) { %>
+    <div class="alert alert-info">
+      No published events are available yet.
     </div>
+  <% } %>
 
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h3 class="card-title mb-3">
-            My Role
-          </h3>
-
-          <p class="card-text text-muted">
-            Your account can view events and buy tickets, but cannot post them.
-          </p>
-
-          <button class="btn btn-outline-secondary" type="button" disabled>
-            Attendee
-          </button>
-        </div>
-      </div>
-    </div>
+  <div class="row g-3">
+    <% events.forEach(function(event) { %>
+      <%- include("events/partials/event-card", {
+        event: event,
+        role: role,
+        actionText: ""
+      }) %>
+    <% }) %>
   </div>
 </div>
 </body>

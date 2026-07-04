@@ -8,10 +8,14 @@
 <div class="container py-5">
   <div class="text-center mb-5">
     <h1 class="display-4 fw-bold">
-      Organiser Dashboard
+      <%= settings.site_name %>
     </h1>
 
     <p class="lead text-muted">
+      <%= settings.site_description %>
+    </p>
+
+    <p class="text-muted">
       Welcome, <%= userName %>. Create and post events for participants to buy tickets.
     </p>
   </div>
@@ -31,6 +35,11 @@
           <a href="/events/new" class="btn btn-dark">
             Create Event
           </a>
+          <form action="/events/new-draft" method="post" class="mt-2">
+            <button type="submit" class="btn btn-outline-dark">
+              Create Blank Draft
+            </button>
+          </form>
         </div>
       </div>
     </div>
@@ -67,9 +76,46 @@
           <button class="btn btn-outline-secondary" type="button" disabled>
             Organiser
           </button>
+          <a href="/organiser/settings" class="btn btn-outline-dark">
+            Site Settings
+          </a>
         </div>
       </div>
     </div>
+  </div>
+
+  <h2 class="mt-5">Draft Events</h2>
+  <% if (draftEvents.length === 0) { %>
+    <div class="alert alert-info">
+      You do not have any draft events.
+    </div>
+  <% } %>
+
+  <div class="row g-3 mb-5">
+    <% draftEvents.forEach(function(event) { %>
+      <%- include("events/partials/event-card", {
+        event: event,
+        role: role,
+        actionText: "Manage Draft"
+      }) %>
+    <% }) %>
+  </div>
+
+  <h2>Published Events</h2>
+  <% if (publishedEvents.length === 0) { %>
+    <div class="alert alert-info">
+      You do not have any published events.
+    </div>
+  <% } %>
+
+  <div class="row g-3">
+    <% publishedEvents.forEach(function(event) { %>
+      <%- include("events/partials/event-card", {
+        event: event,
+        role: role,
+        actionText: "Manage Event"
+      }) %>
+    <% }) %>
   </div>
 </div>
 </body>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include("partials/head", { title: "Site Settings" }) %>
+
+<body>
+<%- include("partials/navbar") %>
+
+<div class="container py-4">
+    <h1>Site Settings</h1>
+
+    <form action="/organiser/settings" method="post" novalidate>
+        <div class="mb-3">
+            <label for="site_name" class="form-label">Site name</label>
+            <input
+                id="site_name"
+                class="form-control <%= errors.site_name ? 'is-invalid' : '' %>"
+                type="text"
+                name="site_name"
+                value="<%= formData.site_name || '' %>"
+            />
+            <% if (errors.site_name) { %>
+                <div class="invalid-feedback">
+                    <%= errors.site_name %>
+                </div>
+            <% } %>
+        </div>
+
+        <div class="mb-3">
+            <label for="site_description" class="form-label">Site description</label>
+            <textarea
+                id="site_description"
+                class="form-control <%= errors.site_description ? 'is-invalid' : '' %>"
+                name="site_description"
+                rows="4"
+            ><%= formData.site_description || '' %></textarea>
+            <% if (errors.site_description) { %>
+                <div class="invalid-feedback">
+                    <%= errors.site_description %>
+                </div>
+            <% } %>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Settings</button>
+        <a href="/organiser/home" class="btn btn-link">Cancel</a>
+    </form>
+</div>
+</body>
+</html>

@@ -1,61 +1,62 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-  <a class="navbar-brand" href="/">Event Manager</a>
+  <% if (currentUserId) { %>
+	<a class="navbar-brand" href="/<%= currentUserRole %>/home"> <%= settings.site_name %> </a>
+  <% } else { %>
+	<a class="navbar-brand" href="/"> <%= settings.site_name %> </a>
+  <% } %>
 
   <button
-    class="navbar-toggler"
-    type="button"
-    data-bs-toggle="collapse"
-    data-bs-target="#navbarNav"
+	class="navbar-toggler"
+	type="button"
+	data-bs-toggle="collapse"
+	data-bs-target="#navbarNav"
   >
-    <span class="navbar-toggler-icon"></span>
+	<span class="navbar-toggler-icon"></span>
   </button>
 
   <div class="collapse navbar-collapse" id="navbarNav">
-    <ul class="navbar-nav ms-auto">
-      <li class="nav-item">
-        <% if (currentUserRole === "organiser") { %>
-          <a class="nav-link" href="/organiser/home">Home</a>
-        <% } else if (currentUserRole === "participant") { %>
-          <a class="nav-link" href="/attendee/home">Home</a>
-        <% } %>
-      </li>
+	<ul class="navbar-nav ms-auto">
 
-      <% if (currentUserId) { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/events">Events</a>
-        </li>
+	  	<% if (currentUserId) { %>
+			<li class="nav-item">
+			<a class="nav-link" href="/events">Events</a>
+			</li>
 
-        <% if (currentUserRole === "organiser") { %>
-          <li class="nav-item">
-            <a class="nav-link" href="/events/new">Create Event</a>
-          </li>
-        <% } %>
+		<% if (currentUserRole === "organiser") { %>
+			<li class="nav-item">
+				<a class="nav-link" href="/events/new">Create Event</a>
+			</li>
+			<li class="nav-item">
+				<a class="nav-link" href="/organiser/settings">Settings</a>
+			</li>
+		<% } %>
 
-        <li class="nav-item dropdown">
-          <a
-            class="nav-link dropdown-toggle"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-          >
-            <%= currentUserName %>
-          </a>
-          <ul class="dropdown-menu dropdown-menu-end">
-            <li>
-              <a class="dropdown-item" href="/auth/logout">Logout</a>
-            </li>
-          </ul>
-        </li>
+		<li class="nav-item dropdown">
+		  <a
+			class="nav-link dropdown-toggle"
+			href="#"
+			role="button"
+			data-bs-toggle="dropdown"
+		  >
+			<%= currentUserName %>
+		  </a>
+		  <ul class="dropdown-menu dropdown-menu-end">
+			<li>
+			  <a class="dropdown-item" href="/auth/logout">Logout</a>
+			</li>
+		  </ul>
+		</li>
 
-      <% } else { %>
-        <li class="nav-item">
-          <a class="nav-link" href="/auth/login">Login</a>
-        </li>
+	  <% } else { %>
+		<li class="nav-item">
+		  <a class="nav-link" href="/auth/login">Login</a>
+		</li>
 
-        <li class="nav-item">
-          <a class="nav-link" href="/auth/register">Register</a>
-        </li>
-      <% } %>
-    </ul>
+		<li class="nav-item">
+		  <a class="nav-link" href="/auth/register">Register</a>
+		</li>
+	  <% } %>
+	</ul>
   </div>
 </nav>
+

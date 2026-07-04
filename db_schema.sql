@@ -34,6 +34,12 @@ CREATE TABLE IF NOT EXISTS events (
     FOREIGN KEY (organiser_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS site_settings (
+    setting_id INTEGER PRIMARY KEY CHECK(setting_id = 1),
+    site_name TEXT NOT NULL,
+    site_description TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS event_tickets (
     ticket_id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id INTEGER NOT NULL,
@@ -57,11 +63,15 @@ CREATE TABLE IF NOT EXISTS ticket_purchases (
     event_id INTEGER NOT NULL,
     ticket_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
+    attendee_name TEXT NOT NULL,
     quantity INTEGER NOT NULL CHECK(quantity > 0),
     purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(event_id),
     FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
+
+INSERT OR IGNORE INTO site_settings (setting_id, site_name, site_description)
+VALUES (1, 'Event Manager', 'Discover events and buy tickets online.');
 
 COMMIT;

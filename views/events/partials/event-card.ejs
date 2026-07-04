@@ -35,10 +35,6 @@
                 </p>
             <% } %>
 
-            <p class="small text-muted">
-                Tickets: <%= event.ticket_summary || "No tickets added" %>
-            </p>
-
             <% if (isSoldOut) { %>
                 <p class="small text-danger">
                     Sold out
