@@ -16,7 +16,11 @@
                 </p>
             </div>
             <% if (role === "organiser") { %>
-                <a href="/events/new" class="btn btn-primary">Create Event</a>
+                <form action="/events/new-draft" method="post">
+                    <button type="submit" class="btn btn-primary">
+                        Create New Event
+                    </button>
+                </form>
             <% } %>
         </div>
 

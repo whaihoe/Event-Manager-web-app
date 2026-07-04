@@ -1,5 +1,5 @@
 {
-    "name": "cm2040_template",
+    "name": "cm2040-event-manager-coursework",
     "version": "1.0.0",
     "description": "A template for the mid-term assignment",
     "main": "index.js",
@@ -9,10 +9,9 @@
         "clean-db": "rm database.db #remove the old database",
         "build-db-win": "sqlite3 database.db < db_schema.sql",
         "clean-db-win": "del database.db",
-        "start": "node index.js",
-        "format": "prettier --write ."
+        "start": "node index.js"
     },
-    "author": "Simon Katan",
+    "author": "Kwok Whai Hoe",
     "license": "ISC",
     "dependencies": {
         "bcrypt": "^6.0.0",

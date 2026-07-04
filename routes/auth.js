@@ -1,12 +1,9 @@
-/**
- * auth.js
- * These routes handle logging in, registering and logging out.
- */
+// These routes handle logging in, registering and logging out.
 
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
-const VALID_ROLES = ['organiser', 'participant'];
+const VALID_ROLES = ['organiser', 'attendee'];
 
 /**
  * @desc Validates if the email is in a valid format
@@ -26,7 +23,7 @@ function getFormData(req) {
     return {
         user_name: req.body.user_name || '',
         email_address: req.body.email_address || '',
-        role: req.body.role || 'participant',
+        role: req.body.role || 'attendee',
     };
 }
 
@@ -53,7 +50,7 @@ function renderRegister(res, errors, formData) {
         formData: formData || {
             user_name: '',
             email_address: '',
-            role: 'participant',
+            role: 'attendee',
         },
     });
 }

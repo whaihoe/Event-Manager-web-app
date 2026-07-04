@@ -1,5 +1,4 @@
 <% const eventLink = role === "organiser" ? `/events/${event.event_id}/edit` : `/events/${event.event_id}`; %>
-<% const buttonText = role === "organiser" ? actionText : "View Event"; %>
 <% const isSoldOut = Number(event.total_tickets) > 0 && Number(event.total_tickets_sold) >= Number(event.total_tickets); %>
 <% const availableTicketSummary = event.available_ticket_summary ? event.available_ticket_summary.split(",").join(", ") : ""; %>
 <% const purchasedTicketSummary = event.purchased_ticket_summary ? event.purchased_ticket_summary.split(",").join(", ") : ""; %>
@@ -7,11 +6,23 @@
 <div class="col-md-6">
     <div class="card h-100 shadow-sm">
         <div class="card-body">
-            <h3 class="h4 card-title">
-                <a href="<%= eventLink %>" class="stretched-link">
-                    <%= event.title %>
-                </a>
-            </h3>
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-2">
+                <h3 class="h4 card-title mb-0">
+                    <a href="<%= eventLink %>" class="stretched-link text-decoration-none">
+                        <%= event.title %>
+                    </a>
+                </h3>
+
+                <% if (event.status === "published") { %>
+                    <button
+                        type="button"
+                        class="btn btn-outline-primary btn-sm copy-share-link"
+                        data-share-url="/events/<%= event.event_id %>"
+                    >
+                        Copy Link
+                    </button>
+                <% } %>
+            </div>
             <p class="text-muted mb-2">
                 <%= event.event_date %> at <%= event.location %>
             </p>
@@ -19,11 +30,9 @@
                 <%= event.description || "No description provided." %>
             </p>
 
-            <% if (role === "participant") { %>
-                <p class="small text-muted">
-                    Posted by <%= event.organiser_name %>
-                </p>
-            <% } %>
+            <p class="small text-muted">
+                Posted by <%= event.organiser_name %>
+            </p>
 
             <p class="small text-muted">
                 Created at <%= event.created_at %>
@@ -45,15 +54,56 @@
                 </p>
             <% } %>
 
-            <% if (role === "participant" && event.purchased_ticket_summary) { %>
+            <% if (role === "attendee" && event.purchased_ticket_summary) { %>
                 <p class="small text-success">
                     Your tickets: <%= purchasedTicketSummary %>
                 </p>
             <% } %>
 
-            <a href="<%= eventLink %>" class="btn btn-primary">
-                <%= buttonText %>
-            </a>
+            <% if (role === "attendee") { %>
+                <a href="<%= eventLink %>" class="btn btn-primary">
+                    View Event
+                </a>
+            <% } %>
+            <% if (role === "organiser") { %>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+
+                    <a
+                        href="/events/<%= event.event_id %>/edit"
+                        class="btn btn-outline-dark"
+                    >
+                        <% if (event.status === "draft") { %>
+                            Manage Draft
+                        <% } else { %>
+                            Manage Event
+                        <% } %>
+                    </a>
+
+                    <% if (event.status === "draft") { %>
+                        <form
+                            action="/events/<%= event.event_id %>/publish"
+                            method="post"
+                            class="d-inline"
+                        >
+                            <button type="submit" class="btn btn-success">
+                                Publish
+                            </button>
+                        </form>
+                    <% } %>
+
+                    <form
+                        action="/events/<%= event.event_id %>/delete"
+                        method="post"
+                        class="d-inline"
+                        onsubmit="return confirm('Are you sure you want to delete this event?');"
+                    >
+                        <button type="submit" class="btn btn-danger">
+                            Delete
+                        </button>
+                    </form>
+
+                </div>
+            <% } %>
         </div>
     </div>
 </div>

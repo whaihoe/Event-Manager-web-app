@@ -9,7 +9,7 @@ BEGIN TRANSACTION;
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'participant' CHECK(role IN ('organiser', 'participant')),
+    role TEXT NOT NULL DEFAULT 'attendee' CHECK(role IN ('organiser', 'attendee')),
     password_hash TEXT NOT NULL
 );
 
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS event_tickets (
     FOREIGN KEY (event_id) REFERENCES events(event_id)
 );
 
-CREATE TABLE IF NOT EXISTS event_participants (
+CREATE TABLE IF NOT EXISTS event_attendees (
     event_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,14 +61,20 @@ CREATE TABLE IF NOT EXISTS event_participants (
 CREATE TABLE IF NOT EXISTS ticket_purchases (
     purchase_id INTEGER PRIMARY KEY AUTOINCREMENT,
     event_id INTEGER NOT NULL,
-    ticket_id INTEGER NOT NULL,
     user_id INTEGER NOT NULL,
     attendee_name TEXT NOT NULL,
-    quantity INTEGER NOT NULL CHECK(quantity > 0),
     purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (event_id) REFERENCES events(event_id),
-    FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id),
     FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS purchase_ticket_items (
+    purchase_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    purchase_id INTEGER NOT NULL,
+    ticket_id INTEGER NOT NULL,
+    quantity INTEGER NOT NULL CHECK(quantity > 0),
+    FOREIGN KEY (purchase_id) REFERENCES ticket_purchases(purchase_id),
+    FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id)
 );
 
 INSERT OR IGNORE INTO site_settings (setting_id, site_name, site_description)

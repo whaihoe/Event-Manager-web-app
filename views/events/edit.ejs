@@ -4,7 +4,17 @@
 <body>
     <%- include("../partials/navbar") %>
     <div class="container py-4">
-        <h1>Edit Event</h1>
+        <a href="/organiser/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
+            &lt; Back
+        </a>
+        <h1>Organiser Edit Event Page</h1>
+        <p class="text-muted">
+            Created at: <%= event.created_at %>
+        </p>
+        <p class="text-muted">
+            Last modified at: <%= event.updated_at %>
+        </p>
+
         <form action="/events/<%= event.event_id %>/edit" method="post" novalidate>
             <%- include("partials/event-form-fields", {
                 errors: errors,
@@ -18,9 +28,10 @@
                 <button
                     type="submit"
                     class="btn btn-success"
-                    formaction="/events/<%= event.event_id %>/publish"
+                    name="publish_after_save"
+                    value="1"
                 >
-                    Publish Event
+                    Save and Publish Event
                 </button>
             <% } %>
             <button
@@ -30,12 +41,12 @@
             >
                 Delete Event
             </button>
-            <a href="/events" class="btn btn-link">Cancel</a>
+            <a href="/organiser/home" class="btn btn-link">Back to Organiser Home Page</a>
         </form>
 
         <h2 class="mt-4">Attendees</h2>
 
-        <% if (!participants || participants.length === 0) { %>
+        <% if (!attendees || attendees.length === 0) { %>
             <div class="alert alert-info">
                 No attendees have bought tickets for this event yet.
             </div>
@@ -46,16 +57,14 @@
                         <th>Name</th>
                         <th>Email</th>
                         <th>Tickets Bought</th>
-                        <th>Purchased At</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% participants.forEach(function(participant) { %>
+                    <% attendees.forEach(function(attendee) { %>
                         <tr>
-                            <td><%= participant.user_name %></td>
-                            <td><%= participant.email_address || "No email found" %></td>
-                            <td><%= participant.ticket_summary || "No tickets found" %></td>
-                            <td><%= participant.joined_at %></td>
+                            <td><%= attendee.user_name %></td>
+                            <td><%= attendee.email_address || "No email found" %></td>
+                            <td><%= attendee.ticket_summary || "No tickets found" %></td>
                         </tr>
                     <% }) %>
                 </tbody>

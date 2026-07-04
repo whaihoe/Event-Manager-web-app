@@ -57,8 +57,8 @@
                     class="form-select <%= errors.role ? 'is-invalid' : '' %>"
                     name="role"
                 >
-                    <option value="participant" <%= formData.role === "participant" ? "selected" : "" %>>
-                        Participant
+                    <option value="attendee" <%= formData.role === "attendee" ? "selected" : "" %>>
+                        Attendee
                     </option>
                     <option value="organiser" <%= formData.role === "organiser" ? "selected" : "" %>>
                         Organiser

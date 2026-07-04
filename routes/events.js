@@ -1,8 +1,7 @@
 /**
  * events.js
  * These routes handle the organiser and attendee event pages.
- * I kept the routes in this file, but moved the database queries into models/eventsModel.js
- * because this file was getting too long.
+ * I kept the route file focused on requests and rendering, while the SQL is in models/eventsModel.js.
  */
 
 const express = require('express');
@@ -171,6 +170,54 @@ function validateEventForm(req) {
 }
 
 /**
+ * @desc Checks the submitted ticket quantities for an attendee purchase
+ * @input Tickets from the database and req.body values
+ * @output Errors, selected ticket rows and form data
+ */
+function validatePurchaseForm(req, tickets) {
+    const errors = {};
+    const selectedTickets = [];
+    const attendeeName = (req.body.attendee_name || '').trim();
+    const formData = {
+        attendee_name: attendeeName,
+    };
+
+    if (!attendeeName) {
+        errors.attendee_name = 'Please enter the attendee name';
+    }
+
+    tickets.forEach(function (ticket) {
+        const fieldName = `ticket_${ticket.ticket_id}`;
+        const quantity = Number(req.body[fieldName] || 0);
+        const remainingTickets = ticket.quantity_available - ticket.quantity_sold;
+
+        formData[fieldName] = req.body[fieldName] || 0;
+
+        if (quantity < 0 || !Number.isInteger(quantity)) {
+            errors.tickets = 'Please enter a valid ticket quantity';
+        } else if (quantity > remainingTickets) {
+            errors.tickets = `Not enough ${ticket.ticket_type} tickets available`;
+        } else if (quantity > 0) {
+            selectedTickets.push({
+                ticket_id: ticket.ticket_id,
+                quantity: quantity,
+            });
+        }
+    });
+
+    if (selectedTickets.length === 0 && !errors.tickets) {
+        errors.tickets = 'Please select at least one ticket';
+    }
+
+    return {
+        errors: errors,
+        selectedTickets: selectedTickets,
+        attendeeName: attendeeName,
+        formData: formData,
+    };
+}
+
+/**
  * @desc Just to render the event list page after events are loaded
  * @input Express req, res and array of events
  * @output Renders events/list.ejs
@@ -224,7 +271,7 @@ router.get('/', requireLogin, function (req, res, next) {
 router.get(
     '/:eventId/purchases/:purchaseId/confirmation',
     requireLogin,
-    requireRole('participant'),
+    requireRole('attendee'),
     function (req, res, next) {
         eventModel.getPurchaseConfirmation(
             req.params.purchaseId,
@@ -241,26 +288,12 @@ router.get(
 
                 res.render('events/purchase-confirmation.ejs', {
                     purchase: purchase,
-                    totalPrice: purchase.price * purchase.quantity,
+                    totalPrice: purchase.total_price,
                 });
             },
         );
     },
 );
-
-/**
- * @desc Displays the form for creating a new event
- * @input Logged in organiser session
- * @output Renders events/new.ejs with empty ticket rows
- */
-router.get('/new', requireLogin, requireRole('organiser'), function (req, res) {
-    res.render('events/new.ejs', {
-        errors: {},
-        formData: {
-            tickets: getFixedTicketRows([]),
-        },
-    });
-});
 
 /**
  * @desc Creates a blank draft event and redirects to its edit page
@@ -290,70 +323,16 @@ router.post(
             },
         ]);
 
-        eventModel.createEvent(
+        eventModel.createEventWithTickets(
             eventData,
             req.session.userId,
+            defaultTickets,
             function (err, eventId) {
                 if (err) {
                     return next(err);
                 }
 
-                eventModel.addEventTickets(
-                    eventId,
-                    defaultTickets,
-                    function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-
-                        res.redirect(`/events/${eventId}/edit`);
-                    },
-                );
-            },
-        );
-    },
-);
-
-/**
- * @desc Adds a new event from the create event form
- * @input Event details and ticket rows from req.body
- * @output Inserts a draft event and redirects to the edit page
- */
-router.post(
-    '/',
-    requireLogin,
-    requireRole('organiser'),
-    function (req, res, next) {
-        const validation = validateEventForm(req);
-        const errors = validation.errors;
-        const formData = validation.formData;
-
-        if (Object.keys(errors).length > 0) {
-            return res.render('events/new.ejs', {
-                errors: errors,
-                formData: formData,
-            });
-        }
-
-        eventModel.createEvent(
-            formData,
-            req.session.userId,
-            function (err, eventId) {
-                if (err) {
-                    return next(err);
-                }
-
-                eventModel.addEventTickets(
-                    eventId,
-                    validation.tickets,
-                    function (err) {
-                        if (err) {
-                            return next(err);
-                        }
-
-                        res.redirect(`/events/${eventId}/edit`);
-                    },
-                );
+                res.redirect(`/events/${eventId}/edit`);
             },
         );
     },
@@ -417,137 +396,76 @@ router.get('/:eventId', requireLogin, function (req, res, next) {
         return res.redirect(`/events/${req.params.eventId}/edit`);
     }
 
-    eventModel.getPublishedEventById(req.params.eventId, function (err, event) {
-        if (err) {
-            return next(err);
-        }
+    eventModel.getAttendeeEventDetails(
+        req.params.eventId,
+        req.session.userId,
+        function (err, pageData) {
+            if (err) {
+                return next(err);
+            }
 
-        if (!event) {
-            return res.status(404).send('Event not found');
-        }
+            if (!pageData) {
+                return res.status(404).send('Event not found');
+            }
 
-        eventModel.getTicketsForAttendee(
-            req.params.eventId,
-            req.session.userId,
-            function (err, tickets) {
-                if (err) {
-                    return next(err);
-                }
-
-                res.render('events/attendee-details.ejs', {
-                    event: event,
-                    tickets: tickets,
-                    errors: {},
-                    formData: {},
-                });
-            },
-        );
-    });
+            res.render('events/attendee-details.ejs', {
+                event: pageData.event,
+                tickets: pageData.tickets,
+                errors: {},
+                formData: {},
+            });
+        },
+    );
 });
 
 /**
  * @desc Purchases selected tickets for an attendee
  * @input eventId from URL, attendee name and ticket quantities from req.body
- * @output Saves the purchase and redirects to the confirmation page
+ * @output Saves one purchase with multiple ticket items, then redirects to confirmation page
  */
 router.post(
     '/:eventId/purchase',
     requireLogin,
-    requireRole('participant'),
+    requireRole('attendee'),
     function (req, res, next) {
-        eventModel.getPublishedEventById(
+        eventModel.getAttendeeEventDetails(
             req.params.eventId,
-            function (err, event) {
+            req.session.userId,
+            function (err, pageData) {
                 if (err) {
                     return next(err);
                 }
 
-                if (!event) {
+                if (!pageData) {
                     return res.status(404).send('Event not found');
                 }
 
-                eventModel.getTicketsForAttendee(
+                const validation = validatePurchaseForm(req, pageData.tickets);
+
+                if (
+                    validation.errors.tickets ||
+                    validation.errors.attendee_name
+                ) {
+                    return res.render('events/attendee-details.ejs', {
+                        event: pageData.event,
+                        tickets: pageData.tickets,
+                        errors: validation.errors,
+                        formData: validation.formData,
+                    });
+                }
+
+                eventModel.createTicketPurchase(
                     req.params.eventId,
                     req.session.userId,
-                    function (err, tickets) {
+                    validation.attendeeName,
+                    validation.selectedTickets,
+                    function (err, purchaseId) {
                         if (err) {
                             return next(err);
                         }
 
-                        const errors = {};
-                        const selectedTickets = [];
-                        const attendeeName = (
-                            req.body.attendee_name || ''
-                        ).trim();
-                        const formData = {
-                            attendee_name: attendeeName,
-                        };
-
-                        if (!attendeeName) {
-                            errors.attendee_name =
-                                'Please enter the attendee name';
-                        }
-
-                        tickets.forEach(function (ticket) {
-                            const fieldName = `ticket_${ticket.ticket_id}`;
-                            const quantity = Number(req.body[fieldName] || 0);
-                            const remainingTickets =
-                                ticket.quantity_available -
-                                ticket.quantity_sold;
-
-                            formData[fieldName] = req.body[fieldName] || 0;
-
-                            if (quantity < 0 || !Number.isInteger(quantity)) {
-                                errors.tickets =
-                                    'Please enter a valid ticket quantity';
-                            } else if (quantity > remainingTickets) {
-                                errors.tickets = `Not enough ${ticket.ticket_type} tickets available`;
-                            } else if (quantity > 0) {
-                                selectedTickets.push({
-                                    ticket_id: ticket.ticket_id,
-                                    quantity: quantity,
-                                });
-                            }
-                        });
-
-                        if (selectedTickets.length === 0 && !errors.tickets) {
-                            errors.tickets =
-                                'Please select at least one ticket';
-                        }
-
-                        if (errors.tickets || errors.attendee_name) {
-                            return res.render('events/attendee-details.ejs', {
-                                event: event,
-                                tickets: tickets,
-                                errors: errors,
-                                formData: formData,
-                            });
-                        }
-
-                        eventModel.addParticipant(
-                            req.params.eventId,
-                            req.session.userId,
-                            function (err) {
-                                if (err) {
-                                    return next(err);
-                                }
-
-                                eventModel.addTicketPurchases(
-                                    req.params.eventId,
-                                    req.session.userId,
-                                    attendeeName,
-                                    selectedTickets,
-                                    function (err, purchaseIds) {
-                                        if (err) {
-                                            return next(err);
-                                        }
-
-                                        res.redirect(
-                                            `/events/${req.params.eventId}/purchases/${purchaseIds[0]}/confirmation`,
-                                        );
-                                    },
-                                );
-                            },
+                        res.redirect(
+                            `/events/${req.params.eventId}/purchases/${purchaseId}/confirmation`,
                         );
                     },
                 );
@@ -559,51 +477,33 @@ router.post(
 /**
  * @desc Displays the organiser edit page for one event
  * @input eventId from URL and organiser id from session
- * @output Renders edit.ejs with event, tickets and participant data
+ * @output Renders edit.ejs with event, tickets and attendee data
  */
 router.get(
     '/:eventId/edit',
     requireLogin,
     requireRole('organiser'),
     function (req, res, next) {
-        eventModel.getOrganiserEventById(
+        eventModel.getOrganiserEventDetails(
             req.params.eventId,
             req.session.userId,
-            function (err, event) {
+            function (err, pageData) {
                 if (err) {
                     return next(err);
                 }
 
-                if (!event) {
+                if (!pageData) {
                     return res.status(404).send('Event not found');
                 }
 
-                eventModel.getTicketsForEvent(
-                    req.params.eventId,
-                    function (err, tickets) {
-                        if (err) {
-                            return next(err);
-                        }
+                pageData.event.tickets = getFixedTicketRows(pageData.tickets);
 
-                        event.tickets = getFixedTicketRows(tickets);
-
-                        eventModel.getParticipantsForEvent(
-                            req.params.eventId,
-                            function (err, participants) {
-                                if (err) {
-                                    return next(err);
-                                }
-
-                                res.render('events/edit.ejs', {
-                                    errors: {},
-                                    formData: event,
-                                    event: event,
-                                    participants: participants,
-                                });
-                            },
-                        );
-                    },
-                );
+                res.render('events/edit.ejs', {
+                    errors: {},
+                    formData: pageData.event,
+                    event: pageData.event,
+                    attendees: pageData.attendees,
+                });
             },
         );
     },
@@ -619,15 +519,15 @@ router.post(
     requireLogin,
     requireRole('organiser'),
     function (req, res, next) {
-        eventModel.getOrganiserEventById(
+        eventModel.getOrganiserEventDetails(
             req.params.eventId,
             req.session.userId,
-            function (err, event) {
+            function (err, pageData) {
                 if (err) {
                     return next(err);
                 }
 
-                if (!event) {
+                if (!pageData) {
                     return res.status(404).send('Event not found');
                 }
 
@@ -635,67 +535,77 @@ router.post(
                 const errors = validation.errors;
                 const formData = validation.formData;
 
-                eventModel.getTicketsForEvent(
+                validation.tickets.forEach(function (ticket) {
+                    const existingTicket = pageData.tickets.find(
+                        function (existingTicket) {
+                            return (
+                                String(existingTicket.ticket_id) ===
+                                String(ticket.ticket_id)
+                            );
+                        },
+                    );
+
+                    if (
+                        existingTicket &&
+                        Number(ticket.quantity_available) <
+                            Number(existingTicket.quantity_sold)
+                    ) {
+                        errors.tickets = `${ticket.ticket_type} quantity cannot be lower than tickets already sold`;
+                    }
+
+                    if (existingTicket) {
+                        ticket.quantity_sold = existingTicket.quantity_sold;
+                    }
+                });
+
+                if (Object.keys(errors).length > 0) {
+                    pageData.event.tickets = getFixedTicketRows(
+                        validation.tickets,
+                    );
+
+                    return res.render('events/edit.ejs', {
+                        errors: errors,
+                        formData: formData,
+                        event: pageData.event,
+                        attendees: pageData.attendees,
+                    });
+                }
+
+                eventModel.updateEvent(
                     req.params.eventId,
-                    function (err, existingTickets) {
+                    req.session.userId,
+                    formData,
+                    function (err) {
                         if (err) {
                             return next(err);
                         }
 
-                        validation.tickets.forEach(function (ticket) {
-                            const existingTicket = existingTickets.find(
-                                function (existingTicket) {
-                                    return (
-                                        String(existingTicket.ticket_id) ===
-                                        String(ticket.ticket_id)
-                                    );
-                                },
-                            );
-
-                            if (
-                                existingTicket &&
-                                Number(ticket.quantity_available) <
-                                    Number(existingTicket.quantity_sold)
-                            ) {
-                                errors.tickets = `${ticket.ticket_type} quantity cannot be lower than tickets already sold`;
-                            }
-
-                            if (existingTicket) {
-                                ticket.quantity_sold =
-                                    existingTicket.quantity_sold;
-                            }
-                        });
-
-                        if (Object.keys(errors).length > 0) {
-                            return res.render('events/edit.ejs', {
-                                errors: errors,
-                                formData: formData,
-                                event: event,
-                                participants: [],
-                            });
-                        }
-
-                        eventModel.updateEvent(
+                        eventModel.saveEventTickets(
                             req.params.eventId,
-                            req.session.userId,
-                            formData,
+                            validation.tickets,
                             function (err) {
                                 if (err) {
                                     return next(err);
                                 }
 
-                                eventModel.saveEventTickets(
-                                    req.params.eventId,
-                                    validation.tickets,
-                                    function (err) {
-                                        if (err) {
-                                            return next(err);
-                                        }
+                                if (req.body.publish_after_save) {
+                                    return eventModel.publishEvent(
+                                        req.params.eventId,
+                                        req.session.userId,
+                                        function (err) {
+                                            if (err) {
+                                                return next(err);
+                                            }
 
-                                        res.redirect(
-                                            `/events/${req.params.eventId}/edit`,
-                                        );
-                                    },
+                                            res.redirect(
+                                                `/events/${req.params.eventId}/edit`,
+                                            );
+                                        },
+                                    );
+                                }
+
+                                res.redirect(
+                                    `/events/${req.params.eventId}/edit`,
                                 );
                             },
                         );

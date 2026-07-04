@@ -1,7 +1,7 @@
 /**
  * eventsModel.js
  * I moved the event database code here because routes/events.js was getting too long.
- * The queries are kept as smaller steps so they are easier for me to read and explain.
+ * The route file should mainly decide what page to show, while this file handles the SQL.
  */
 
 /**
@@ -46,9 +46,7 @@ function getOrganiserEvents(organiserId, callback) {
         ORDER BY events.event_date ASC
     `;
 
-    const query_parameters = [organiserId];
-
-    global.db.all(query, query_parameters, function (err, events) {
+    global.db.all(query, [organiserId], function (err, events) {
         if (err) {
             return callback(err);
         }
@@ -103,7 +101,7 @@ function addEventSummaries(events, userId, callback) {
 }
 
 /**
- * @desc Adds ticket totals and participant count to one event
+ * @desc Adds ticket totals and attendee count to one event
  * @input One event row and optional userId
  * @output The event row with summary fields for the page cards
  */
@@ -113,12 +111,12 @@ function addEventSummary(event, userId, callback) {
             return callback(err);
         }
 
-        getParticipantCount(event.event_id, function (err, participantCount) {
+        getAttendeeCount(event.event_id, function (err, attendeeCount) {
             if (err) {
                 return callback(err);
             }
 
-            event.participant_count = participantCount;
+            event.attendee_count = attendeeCount;
             event.total_tickets = 0;
             event.total_tickets_sold = 0;
 
@@ -142,8 +140,8 @@ function addEventSummary(event, userId, callback) {
                 );
             });
 
-            event.available_ticket_summary = availableSummaries.join(',');
-            event.ticket_summary = ticketSummaries.join(',');
+            event.available_ticket_summary = availableSummaries.join(', ');
+            event.ticket_summary = ticketSummaries.join(', ');
 
             if (!userId) {
                 return callback();
@@ -161,7 +159,7 @@ function addEventSummary(event, userId, callback) {
                         .map(function (purchase) {
                             return `${purchase.ticket_type} x${purchase.quantity}`;
                         })
-                        .join(',');
+                        .join(', ');
 
                     callback();
                 },
@@ -173,12 +171,12 @@ function addEventSummary(event, userId, callback) {
 /**
  * @desc Counts how many users joined one event
  * @input eventId from the event row
- * @output A number showing the participant count
+ * @output A number showing the attendee count
  */
-function getParticipantCount(eventId, callback) {
+function getAttendeeCount(eventId, callback) {
     const query = `
-        SELECT COUNT(*) AS participant_count
-        FROM event_participants
+        SELECT COUNT(*) AS attendee_count
+        FROM event_attendees
         WHERE event_id = ?
     `;
 
@@ -187,7 +185,7 @@ function getParticipantCount(eventId, callback) {
             return callback(err);
         }
 
-        callback(null, row.participant_count || 0);
+        callback(null, row.attendee_count || 0);
     });
 }
 
@@ -199,7 +197,7 @@ function getParticipantCount(eventId, callback) {
 function getQuantitySoldForTicket(ticketId, callback) {
     const query = `
         SELECT SUM(quantity) AS quantity_sold
-        FROM ticket_purchases
+        FROM purchase_ticket_items
         WHERE ticket_id = ?
     `;
 
@@ -219,10 +217,12 @@ function getQuantitySoldForTicket(ticketId, callback) {
  */
 function getQuantityBoughtForTicket(ticketId, userId, callback) {
     const query = `
-        SELECT SUM(quantity) AS quantity_bought
-        FROM ticket_purchases
-        WHERE ticket_id = ?
-        AND user_id = ?
+        SELECT SUM(purchase_ticket_items.quantity) AS quantity_bought
+        FROM purchase_ticket_items
+        JOIN ticket_purchases
+        ON purchase_ticket_items.purchase_id = ticket_purchases.purchase_id
+        WHERE purchase_ticket_items.ticket_id = ?
+        AND ticket_purchases.user_id = ?
     `;
 
     global.db.get(query, [ticketId, userId], function (err, row) {
@@ -314,6 +314,69 @@ function getTicketsForAttendee(eventId, userId, callback) {
 }
 
 /**
+ * @desc Gets a published event with its ticket rows for the attendee page
+ * @input eventId from URL and userId from session
+ * @output Event and tickets used by attendee-details.ejs
+ */
+function getAttendeeEventDetails(eventId, userId, callback) {
+    getPublishedEventById(eventId, function (err, event) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (!event) {
+            return callback(null, null);
+        }
+
+        getTicketsForAttendee(eventId, userId, function (err, tickets) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, {
+                event: event,
+                tickets: tickets,
+            });
+        });
+    });
+}
+
+/**
+ * @desc Gets one organiser event with tickets and attendees for the edit page
+ * @input eventId and organiserId
+ * @output Event, ticket rows and attendees
+ */
+function getOrganiserEventDetails(eventId, organiserId, callback) {
+    getOrganiserEventById(eventId, organiserId, function (err, event) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (!event) {
+            return callback(null, null);
+        }
+
+        getTicketsForEvent(eventId, function (err, tickets) {
+            if (err) {
+                return callback(err);
+            }
+
+            getAttendeesForEvent(eventId, function (err, attendees) {
+                if (err) {
+                    return callback(err);
+                }
+
+                callback(null, {
+                    event: event,
+                    tickets: tickets,
+                    attendees: attendees,
+                });
+            });
+        });
+    });
+}
+
+/**
  * @desc Adds ticket records after an event has been created
  * @input eventId and array of ticket objects
  * @output Calls callback after all tickets are inserted
@@ -381,6 +444,27 @@ function createEvent(eventData, organiserId, callback) {
 }
 
 /**
+ * @desc Creates an event and adds its two ticket rows
+ * @input Event form data, organiserId and ticket rows
+ * @output The new event id
+ */
+function createEventWithTickets(eventData, organiserId, tickets, callback) {
+    createEvent(eventData, organiserId, function (err, eventId) {
+        if (err) {
+            return callback(err);
+        }
+
+        addEventTickets(eventId, tickets, function (err) {
+            if (err) {
+                return callback(err);
+            }
+
+            callback(null, eventId);
+        });
+    });
+}
+
+/**
  * @desc Publishes a draft event that belongs to the logged in organiser
  * @input eventId from URL and organiserId from session
  * @output Updates the event status and timestamp
@@ -407,13 +491,27 @@ function publishEvent(eventId, organiserId, callback) {
 function deleteEvent(eventId, organiserId, callback) {
     const query_parameters = [eventId, organiserId];
 
-    const deleteParticipantsQuery = `
-        DELETE FROM event_participants
+    const deleteAttendeesQuery = `
+        DELETE FROM event_attendees
         WHERE event_id = ?
         AND event_id IN (
             SELECT event_id
             FROM events
             WHERE organiser_id = ?
+        )
+    `;
+
+    const deletePurchaseItemsQuery = `
+        DELETE FROM purchase_ticket_items
+        WHERE purchase_id IN (
+            SELECT purchase_id
+            FROM ticket_purchases
+            WHERE event_id = ?
+            AND event_id IN (
+                SELECT event_id
+                FROM events
+                WHERE organiser_id = ?
+            )
         )
     `;
 
@@ -444,22 +542,28 @@ function deleteEvent(eventId, organiserId, callback) {
     `;
 
     // These deletes are done in order because the other tables depend on events.
-    global.db.run(deleteParticipantsQuery, query_parameters, function (err) {
+    global.db.run(deleteAttendeesQuery, query_parameters, function (err) {
         if (err) {
             return callback(err);
         }
 
-        global.db.run(deletePurchasesQuery, query_parameters, function (err) {
+        global.db.run(deletePurchaseItemsQuery, query_parameters, function (err) {
             if (err) {
                 return callback(err);
             }
 
-            global.db.run(deleteTicketsQuery, query_parameters, function (err) {
+            global.db.run(deletePurchasesQuery, query_parameters, function (err) {
                 if (err) {
                     return callback(err);
                 }
 
-                global.db.run(deleteEventQuery, query_parameters, callback);
+                global.db.run(deleteTicketsQuery, query_parameters, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    global.db.run(deleteEventQuery, query_parameters, callback);
+                });
             });
         });
     });
@@ -505,55 +609,53 @@ function getOrganiserEventById(eventId, organiserId, callback) {
             return callback(null, null);
         }
 
-        getParticipantCount(event.event_id, function (err, participantCount) {
+        getAttendeeCount(event.event_id, function (err, attendeeCount) {
             if (err) {
                 return callback(err);
             }
 
-            event.participant_count = participantCount;
+            event.attendee_count = attendeeCount;
             callback(null, event);
         });
     });
 }
 
 /**
- * @desc Gets all participants for one event
+ * @desc Gets all attendees for one event
  * @input eventId from the organiser edit page
- * @output Array of participant rows with ticket summary text added
+ * @output Array of attendee rows with ticket summary text added
  */
-function getParticipantsForEvent(eventId, callback) {
+function getAttendeesForEvent(eventId, callback) {
     const query = `
         SELECT
             users.user_id,
             users.user_name,
             email_accounts.email_address,
-            event_participants.joined_at
-        FROM event_participants
+            event_attendees.joined_at
+        FROM event_attendees
         JOIN users
-        ON event_participants.user_id = users.user_id
+        ON event_attendees.user_id = users.user_id
         LEFT JOIN email_accounts
         ON users.user_id = email_accounts.user_id
-        WHERE event_participants.event_id = ?
+        WHERE event_attendees.event_id = ?
         ORDER BY users.user_name ASC
     `;
 
-    global.db.all(query, [eventId], function (err, participants) {
+    global.db.all(query, [eventId], function (err, attendees) {
         if (err) {
             return callback(err);
         }
 
-        runEach(
-            participants,
-            function (participant, done) {
+        runEach(attendees, function (attendee, done) {
                 getPurchasesForUserAndEvent(
                     eventId,
-                    participant.user_id,
+                    attendee.user_id,
                     function (err, purchases) {
                         if (err) {
                             return done(err);
                         }
 
-                        participant.ticket_summary = purchases
+                        attendee.ticket_summary = purchases
                             .map(function (purchase) {
                                 return `${purchase.ticket_type} x${purchase.quantity}`;
                             })
@@ -568,7 +670,7 @@ function getParticipantsForEvent(eventId, callback) {
                     return callback(err);
                 }
 
-                callback(null, participants);
+                callback(null, attendees);
             },
         );
     });
@@ -665,11 +767,11 @@ function saveEventTickets(eventId, tickets, callback) {
 /**
  * @desc Records the attendee as joined for the event
  * @input eventId and userId
- * @output Inserts into event_participants if it does not exist yet
+ * @output Inserts into event_attendees if it does not exist yet
  */
-function addParticipant(eventId, userId, callback) {
+function addAttendee(eventId, userId, callback) {
     const query = `
-        INSERT OR IGNORE INTO event_participants (event_id, user_id)
+        INSERT OR IGNORE INTO event_attendees (event_id, user_id)
         VALUES (?, ?)
     `;
 
@@ -677,67 +779,89 @@ function addParticipant(eventId, userId, callback) {
 }
 
 /**
- * @desc Adds ticket purchase rows one at a time
+ * @desc Adds one purchase record and the ticket types inside it
  * @input eventId, userId, attendee name and selected tickets
- * @output Array of new purchase ids
+ * @output The new purchase id
  */
-function addTicketPurchases(
+function createTicketPurchase(
     eventId,
     userId,
     attendeeName,
     selectedTickets,
     callback,
 ) {
-    const ticketsToBuy = selectedTickets.slice();
-    const purchaseIds = [];
-
-    function addNextPurchase() {
-        const ticket = ticketsToBuy.shift();
-
-        if (!ticket) {
-            return callback(null, purchaseIds);
+    addAttendee(eventId, userId, function (err) {
+        if (err) {
+            return callback(err);
         }
 
-        const query = `
-            INSERT INTO ticket_purchases (event_id, ticket_id, user_id, attendee_name, quantity)
-            VALUES (?, ?, ?, ?, ?)
+        const purchaseQuery = `
+            INSERT INTO ticket_purchases (event_id, user_id, attendee_name)
+            VALUES (?, ?, ?)
         `;
 
-        const query_parameters = [
-            eventId,
-            ticket.ticket_id,
-            userId,
-            attendeeName,
-            ticket.quantity,
-        ];
+        const purchaseParameters = [eventId, userId, attendeeName];
 
-        global.db.run(query, query_parameters, function (err) {
+        global.db.run(purchaseQuery, purchaseParameters, function (err) {
             if (err) {
                 return callback(err);
             }
 
-            purchaseIds.push(this.lastID);
-            addNextPurchase();
-        });
-    }
+            const purchaseId = this.lastID;
+            const ticketsToAdd = selectedTickets.slice();
 
-    addNextPurchase();
+            function addNextTicketItem() {
+                const ticket = ticketsToAdd.shift();
+
+                if (!ticket) {
+                    return callback(null, purchaseId);
+                }
+
+                const itemQuery = `
+                    INSERT INTO purchase_ticket_items (purchase_id, ticket_id, quantity)
+                    VALUES (?, ?, ?)
+                `;
+
+                const itemParameters = [
+                    purchaseId,
+                    ticket.ticket_id,
+                    ticket.quantity,
+                ];
+
+                global.db.run(itemQuery, itemParameters, function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    addNextTicketItem();
+                });
+            }
+
+            addNextTicketItem();
+        });
+    });
 }
 
 /**
- * @desc Gets purchases for one user in one event
+ * @desc Gets the total tickets bought by one attendee for one event
  * @input eventId and userId
- * @output Array of purchase rows with ticket type included
+ * @output Array of ticket rows grouped by ticket type
  */
 function getPurchasesForUserAndEvent(eventId, userId, callback) {
     const query = `
-        SELECT ticket_purchases.*, event_tickets.ticket_type
+        SELECT
+            event_tickets.ticket_type,
+            SUM(purchase_ticket_items.quantity) AS quantity
         FROM ticket_purchases
+        JOIN purchase_ticket_items
+        ON ticket_purchases.purchase_id = purchase_ticket_items.purchase_id
         JOIN event_tickets
-        ON ticket_purchases.ticket_id = event_tickets.ticket_id
+        ON purchase_ticket_items.ticket_id = event_tickets.ticket_id
         WHERE ticket_purchases.event_id = ?
         AND ticket_purchases.user_id = ?
-        ORDER BY ticket_purchases.purchase_id ASC
+        GROUP BY event_tickets.ticket_id,
+             event_tickets.ticket_type
+        ORDER BY event_tickets.ticket_id ASC
     `;
 
     global.db.all(query, [eventId, userId], callback);
@@ -746,21 +870,17 @@ function getPurchasesForUserAndEvent(eventId, userId, callback) {
 /**
  * @desc Gets a purchase confirmation record for the logged in attendee
  * @input purchaseId, eventId and userId
- * @output One purchase row with event and ticket details
+ * @output One purchase with event details and all ticket items
  */
 function getPurchaseConfirmation(purchaseId, eventId, userId, callback) {
-    const query = `
+    const purchaseQuery = `
         SELECT
             ticket_purchases.*,
-            event_tickets.ticket_type,
-            event_tickets.price,
             events.title,
             events.event_date,
             events.location,
             users.user_name AS organiser_name
         FROM ticket_purchases
-        JOIN event_tickets
-        ON ticket_purchases.ticket_id = event_tickets.ticket_id
         JOIN events
         ON ticket_purchases.event_id = events.event_id
         JOIN users
@@ -770,7 +890,50 @@ function getPurchaseConfirmation(purchaseId, eventId, userId, callback) {
         AND ticket_purchases.user_id = ?
     `;
 
-    global.db.get(query, [purchaseId, eventId, userId], callback);
+    global.db.get(
+        purchaseQuery,
+        [purchaseId, eventId, userId],
+        function (err, purchase) {
+            if (err) {
+                return callback(err);
+            }
+
+            if (!purchase) {
+                return callback(null, null);
+            }
+
+            const itemsQuery = `
+                SELECT
+                    purchase_ticket_items.purchase_item_id,
+                    purchase_ticket_items.ticket_id,
+                    purchase_ticket_items.quantity,
+                    event_tickets.ticket_type,
+                    event_tickets.price
+                FROM purchase_ticket_items
+                JOIN event_tickets
+                ON purchase_ticket_items.ticket_id = event_tickets.ticket_id
+                WHERE purchase_ticket_items.purchase_id = ?
+                ORDER BY purchase_ticket_items.purchase_item_id ASC
+            `;
+
+            global.db.all(itemsQuery, [purchaseId], function (err, tickets) {
+                if (err) {
+                    return callback(err);
+                }
+
+                let totalPrice = 0;
+
+                tickets.forEach(function (ticket) {
+                    totalPrice += ticket.price * ticket.quantity;
+                });
+
+                purchase.tickets = tickets;
+                purchase.total_price = totalPrice;
+
+                callback(null, purchase);
+            });
+        },
+    );
 }
 
 module.exports = {
@@ -778,16 +941,16 @@ module.exports = {
     getPublishedEvents,
     getTicketsForEvent,
     getTicketsForAttendee,
-    addEventTickets,
-    createEvent,
+    getAttendeeEventDetails,
+    getOrganiserEventDetails,
+    createEventWithTickets,
     publishEvent,
     deleteEvent,
     getPublishedEventById,
     getOrganiserEventById,
-    getParticipantsForEvent,
+    getAttendeesForEvent,
     updateEvent,
     saveEventTickets,
-    addParticipant,
-    addTicketPurchases,
+    createTicketPurchase,
     getPurchaseConfirmation,
 };

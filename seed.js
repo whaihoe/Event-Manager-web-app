@@ -28,13 +28,13 @@ function seedDatabase() {
                     },
                     {
                         user_name: 'Dianne Dean',
-                        role: 'participant',
+                        role: 'attendee',
                         password: 'password123',
                         emails: ['dianne@yahoo.co.uk'],
                     },
                     {
                         user_name: 'Harry Hilbert',
-                        role: 'participant',
+                        role: 'attendee',
                         password: 'password123',
                         emails: [],
                     },
@@ -80,7 +80,7 @@ function ensureDatabaseSchema(done) {
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_name TEXT NOT NULL,
-                role TEXT NOT NULL DEFAULT 'participant' CHECK(role IN ('organiser', 'participant')),
+                role TEXT NOT NULL DEFAULT 'attendee' CHECK(role IN ('organiser', 'attendee')),
                 password_hash TEXT NOT NULL
             )
         `);
@@ -136,7 +136,7 @@ function ensureDatabaseSchema(done) {
                     `);
 
                     global.db.run(`
-                        CREATE TABLE IF NOT EXISTS event_participants (
+                        CREATE TABLE IF NOT EXISTS event_attendees (
                             event_id INTEGER NOT NULL,
                             user_id INTEGER NOT NULL,
                             joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -162,19 +162,27 @@ function ensureDatabaseSchema(done) {
                         ],
                     );
 
-                    global.db.run(
-                        `
+                    global.db.run(`
                         CREATE TABLE IF NOT EXISTS ticket_purchases (
                             purchase_id INTEGER PRIMARY KEY AUTOINCREMENT,
                             event_id INTEGER NOT NULL,
-                            ticket_id INTEGER NOT NULL,
                             user_id INTEGER NOT NULL,
                             attendee_name TEXT NOT NULL DEFAULT '',
-                            quantity INTEGER NOT NULL CHECK(quantity > 0),
                             purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
                             FOREIGN KEY (event_id) REFERENCES events(event_id),
-                            FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id),
                             FOREIGN KEY (user_id) REFERENCES users(user_id)
+                        )
+                    `);
+
+                    global.db.run(
+                        `
+                        CREATE TABLE IF NOT EXISTS purchase_ticket_items (
+                            purchase_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            purchase_id INTEGER NOT NULL,
+                            ticket_id INTEGER NOT NULL,
+                            quantity INTEGER NOT NULL CHECK(quantity > 0),
+                            FOREIGN KEY (purchase_id) REFERENCES ticket_purchases(purchase_id),
+                            FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id)
                         )
                     `,
                         callback,
@@ -252,7 +260,7 @@ function ensureDatabaseSchema(done) {
                 );
             }
 
-            // Add attendee name for older databases created before booking names existed
+            // Update older purchase tables if they used one row per ticket type
             function updateTicketPurchasesTable() {
                 global.db.all(
                     'PRAGMA table_info(ticket_purchases)',
@@ -262,33 +270,105 @@ function ensureDatabaseSchema(done) {
                             return done();
                         }
 
-                        const hasAttendeeNameColumn =
-                            ticketPurchaseColumns.some(function (column) {
-                                return column.name === 'attendee_name';
-                            });
+                        const hasTicketIdColumn = ticketPurchaseColumns.some(
+                            function (column) {
+                                return column.name === 'ticket_id';
+                            },
+                        );
 
-                        if (!hasAttendeeNameColumn) {
-                            return global.db.run(
-                                "ALTER TABLE ticket_purchases ADD COLUMN attendee_name TEXT NOT NULL DEFAULT ''",
-                                function (err) {
-                                    if (err) {
-                                        console.log(err);
-                                    }
+                        const hasQuantityColumn = ticketPurchaseColumns.some(
+                            function (column) {
+                                return column.name === 'quantity';
+                            },
+                        );
 
-                                    done();
-                                },
-                            );
+                        if (hasTicketIdColumn && hasQuantityColumn) {
+                            return migrateOldPurchaseTable(done);
                         }
 
-                        done();
+                        global.db.run(
+                            `
+                            CREATE TABLE IF NOT EXISTS purchase_ticket_items (
+                                purchase_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                purchase_id INTEGER NOT NULL,
+                                ticket_id INTEGER NOT NULL,
+                                quantity INTEGER NOT NULL CHECK(quantity > 0),
+                                FOREIGN KEY (purchase_id) REFERENCES ticket_purchases(purchase_id),
+                                FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id)
+                            )
+                        `,
+                            done,
+                        );
                     },
                 );
+            }
+
+            // This keeps older test databases working after changing the purchase design
+            function migrateOldPurchaseTable(callback) {
+                global.db.serialize(function () {
+                    global.db.run('ALTER TABLE ticket_purchases RENAME TO old_ticket_purchases');
+
+                    global.db.run(`
+                        CREATE TABLE IF NOT EXISTS ticket_purchases (
+                            purchase_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            event_id INTEGER NOT NULL,
+                            user_id INTEGER NOT NULL,
+                            attendee_name TEXT NOT NULL DEFAULT '',
+                            purchased_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (event_id) REFERENCES events(event_id),
+                            FOREIGN KEY (user_id) REFERENCES users(user_id)
+                        )
+                    `);
+
+                    global.db.run(`
+                        CREATE TABLE IF NOT EXISTS purchase_ticket_items (
+                            purchase_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            purchase_id INTEGER NOT NULL,
+                            ticket_id INTEGER NOT NULL,
+                            quantity INTEGER NOT NULL CHECK(quantity > 0),
+                            FOREIGN KEY (purchase_id) REFERENCES ticket_purchases(purchase_id),
+                            FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id)
+                        )
+                    `);
+
+                    global.db.run(`
+                        INSERT INTO ticket_purchases (
+                            purchase_id,
+                            event_id,
+                            user_id,
+                            attendee_name,
+                            purchased_at
+                        )
+                        SELECT
+                            purchase_id,
+                            event_id,
+                            user_id,
+                            COALESCE(attendee_name, ''),
+                            purchased_at
+                        FROM old_ticket_purchases
+                    `);
+
+                    global.db.run(`
+                        INSERT INTO purchase_ticket_items (
+                            purchase_id,
+                            ticket_id,
+                            quantity
+                        )
+                        SELECT
+                            purchase_id,
+                            ticket_id,
+                            quantity
+                        FROM old_ticket_purchases
+                    `);
+
+                    global.db.run('DROP TABLE old_ticket_purchases', callback);
+                });
             }
 
             // Add role for older databases that were created before roles existed
             if (!hasRoleColumn) {
                 return global.db.run(
-                    "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'participant' CHECK(role IN ('organiser', 'participant'))",
+                    "ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'attendee' CHECK(role IN ('organiser', 'attendee'))",
                     function () {
                         createEventTables(updateEventTable);
                     },

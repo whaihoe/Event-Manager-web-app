@@ -6,37 +6,40 @@
 <%- include("partials/navbar") %>
 
 <div class="container py-5">
-  <div class="text-center mb-5">
-    <h1 class="display-4 fw-bold">
-      <%= settings.site_name %>
-    </h1>
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">
+            Attendee Home Page
+        </h1>
+        <h2 class="h4 text-muted">
+            <%= settings.site_name %>
+        </h2>
 
-    <p class="lead text-muted">
-      <%= settings.site_description %>
-    </p>
+        <p class="lead text-muted">
+            <%= settings.site_description %>
+        </p>
 
-    <p class="text-muted">
-      Welcome, <%= userName %>. Browse available events and buy tickets for the ones you are interested in.
-    </p>
-  </div>
-
-
-  <h2 class="mt-5">Published Events</h2>
-  <% if (events.length === 0) { %>
-    <div class="alert alert-info">
-      No published events are available yet.
+        <p class="text-muted">
+            Welcome, <%= userName %>. Browse available events and buy tickets for the ones you are interested in.
+        </p>
     </div>
-  <% } %>
 
-  <div class="row g-3">
-    <% events.forEach(function(event) { %>
-      <%- include("events/partials/event-card", {
-        event: event,
-        role: role,
-        actionText: ""
-      }) %>
-    <% }) %>
-  </div>
+
+    <h2 class="mt-5">Published Events</h2>
+    <% if (events.length === 0) { %>
+        <div class="alert alert-info">
+            No published events are available yet.
+        </div>
+    <% } %>
+
+    <div class="row g-3">
+        <% events.forEach(function(event) { %>
+            <%- include("events/partials/event-card", {
+                event: event,
+                role: role,
+                actionText: ""
+            }) %>
+        <% }) %>
+    </div>
 </div>
 </body>
 </html>

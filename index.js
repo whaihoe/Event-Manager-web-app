@@ -11,9 +11,8 @@ const seedDatabase = require('./seed');
 const session = require('express-session');
 const requireLogin = require('./middleware/auth.js');
 const eventModel = require('./models/eventsModel.js');
-const bodyParser = require('body-parser');
 
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.use(express.static(__dirname + '/public'));
 
@@ -84,7 +83,7 @@ app.use(function (req, res, next) {
  * @output Renders main-home.ejs with the site settings
  */
 app.get('/', function (req, res) {
-    res.render('main-home.ejs', {
+    res.render('index.ejs', {
         settings: req.settings,
     });
 });
@@ -133,11 +132,11 @@ app.get('/organiser/home', requireLogin, function (req, res) {
 
 /**
  * @desc Displays the attendee home page
- * @input Attendee id from the session
+ * @input attendee id from the session
  * @output Renders attendee-home.ejs with published events
  */
 app.get('/attendee/home', requireLogin, function (req, res) {
-    if (req.session.userRole !== 'participant') {
+    if (req.session.userRole !== 'attendee') {
         return res.redirect('/organiser/home');
     }
 
@@ -150,7 +149,7 @@ app.get('/attendee/home', requireLogin, function (req, res) {
             userName: req.session.userName,
             settings: req.settings,
             events: events,
-            role: 'participant',
+            role: 'attendee',
         });
     });
 });

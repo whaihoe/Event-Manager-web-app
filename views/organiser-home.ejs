@@ -1,122 +1,122 @@
 <!DOCTYPE html>
 <html lang="en">
-<%- include("partials/head", { title: "Organiser Dashboard" }) %>
+<%- include("partials/head", { title: "Organiser Home Page" }) %>
 
 <body>
 <%- include("partials/navbar") %>
 
 <div class="container py-5">
-  <div class="text-center mb-5">
-    <h1 class="display-4 fw-bold">
-      <%= settings.site_name %>
-    </h1>
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">
+            Organiser Home Page
+        </h1>
+        <h2 class="h4 text-muted">
+            <%= settings.site_name %>
+        </h2>
 
-    <p class="lead text-muted">
-      <%= settings.site_description %>
-    </p>
+        <p class="lead text-muted">
+            <%= settings.site_description %>
+        </p>
 
-    <p class="text-muted">
-      Welcome, <%= userName %>. Create and post events for participants to buy tickets.
-    </p>
-  </div>
+        <p class="text-muted">
+            Welcome, <%= userName %>. Create and post events for attendees to buy tickets.
+        </p>
+    </div>
 
-  <div class="row g-4 justify-content-center">
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h3 class="card-title mb-3">
-            Create Events
-          </h3>
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-3">
+                        Create Events
+                    </h3>
 
-          <p class="card-text text-muted">
-            Post event details so participants can discover them and buy tickets.
-          </p>
+                    <p class="card-text text-muted">
+                        Post event details so attendees can discover them and buy tickets.
+                    </p>
 
-          <a href="/events/new" class="btn btn-dark">
-            Create Event
-          </a>
-          <form action="/events/new-draft" method="post" class="mt-2">
-            <button type="submit" class="btn btn-outline-dark">
-              Create Blank Draft
-            </button>
-          </form>
+                    <form action="/events/new-draft" method="post">
+                        <button type="submit" class="btn btn-dark">
+                            Create New Event
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h3 class="card-title mb-3">
-            Posted Events
-          </h3>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-3">
+                        Posted Events
+                    </h3>
 
-          <p class="card-text text-muted">
-            Review the events you have posted for participants.
-          </p>
+                    <p class="card-text text-muted">
+                        Review the events you have posted for attendees.
+                    </p>
 
-          <a href="/events" class="btn btn-dark">
-            View Events
-          </a>
+                    <a href="/events" class="btn btn-dark">
+                        View Events
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
 
-    <div class="col-md-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h3 class="card-title mb-3">
-            Participants
-          </h3>
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <h3 class="card-title mb-3">
+                        Attendees
+                    </h3>
 
-          <p class="card-text text-muted">
-            Participants can view your posted events and buy tickets.
-          </p>
+                    <p class="card-text text-muted">
+                        Attendees can view your posted events and buy tickets.
+                    </p>
 
-          <button class="btn btn-outline-secondary" type="button" disabled>
-            Organiser
-          </button>
-          <a href="/organiser/settings" class="btn btn-outline-dark">
-            Site Settings
-          </a>
+                    <button class="btn btn-outline-secondary" type="button" disabled>
+                        Organiser
+                    </button>
+                    <a href="/organiser/settings" class="btn btn-outline-dark">
+                        Site Settings
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <h2 class="mt-5">Draft Events</h2>
-  <% if (draftEvents.length === 0) { %>
-    <div class="alert alert-info">
-      You do not have any draft events.
+    <h2 class="mt-5">Draft Events</h2>
+    <% if (draftEvents.length === 0) { %>
+        <div class="alert alert-info">
+            You do not have any draft events.
+        </div>
+    <% } %>
+
+    <div class="row g-3 mb-5">
+        <% draftEvents.forEach(function(event) { %>
+            <%- include("events/partials/event-card", {
+                event: event,
+                role: role,
+                actionText: "Manage Draft"
+            }) %>
+        <% }) %>
     </div>
-  <% } %>
 
-  <div class="row g-3 mb-5">
-    <% draftEvents.forEach(function(event) { %>
-      <%- include("events/partials/event-card", {
-        event: event,
-        role: role,
-        actionText: "Manage Draft"
-      }) %>
-    <% }) %>
-  </div>
+    <h2>Published Events</h2>
+    <% if (publishedEvents.length === 0) { %>
+        <div class="alert alert-info">
+            You do not have any published events.
+        </div>
+    <% } %>
 
-  <h2>Published Events</h2>
-  <% if (publishedEvents.length === 0) { %>
-    <div class="alert alert-info">
-      You do not have any published events.
+    <div class="row g-3">
+        <% publishedEvents.forEach(function(event) { %>
+            <%- include("events/partials/event-card", {
+                event: event,
+                role: role,
+                actionText: "Manage Event"
+            }) %>
+        <% }) %>
     </div>
-  <% } %>
-
-  <div class="row g-3">
-    <% publishedEvents.forEach(function(event) { %>
-      <%- include("events/partials/event-card", {
-        event: event,
-        role: role,
-        actionText: "Manage Event"
-      }) %>
-    <% }) %>
-  </div>
 </div>
 </body>
 </html>

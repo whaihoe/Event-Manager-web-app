@@ -4,7 +4,12 @@
 <body>
     <%- include("../partials/navbar") %>
     <div class="container py-4">
-        <h1><%= event.title %></h1>
+        <a href="/organiser/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
+            &lt; Back
+        </a>
+        <h1>Attendee Event Page</h1>
+        <h2><%= event.title %></h2>
+
 
         <div class="mb-4">
             <p><strong>Date:</strong> <%= event.event_date %></p>
@@ -72,8 +77,8 @@
                 </tbody>
             </table>
 
-            <button type="submit" class="btn btn-primary">Purchase Tickets</button>
-            <a href="/events" class="btn btn-link">Back</a>
+            <button type="submit" class="btn btn-primary">Book Tickets</button>
+            <a href="/attendee/home" class="btn btn-link">Back</a>
         </form>
     </div>
 </body>
