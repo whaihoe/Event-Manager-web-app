@@ -218,52 +218,6 @@ function validatePurchaseForm(req, tickets) {
 }
 
 /**
- * @desc Just to render the event list page after events are loaded
- * @input Express req, res and array of events
- * @output Renders events/list.ejs
- */
-function renderEventList(req, res, events) {
-    res.render('events/list.ejs', {
-        draftEvents: events.filter(function (event) {
-            return event.status === 'draft';
-        }),
-        publishedEvents: events.filter(function (event) {
-            return event.status === 'published';
-        }),
-        events: events,
-        role: req.session.userRole,
-    });
-}
-
-/**
- * @desc List of events depending on organiser or attendee
- * @input Session user id and role
- * @output Renders organiser events or attendee published events
- */
-router.get('/', requireLogin, function (req, res, next) {
-    if (req.session.userRole === 'organiser') {
-        return eventModel.getOrganiserEvents(
-            req.session.userId,
-            function (err, events) {
-                if (err) {
-                    return next(err);
-                }
-
-                renderEventList(req, res, events);
-            },
-        );
-    }
-
-    eventModel.getPublishedEvents(req.session.userId, function (err, events) {
-        if (err) {
-            return next(err);
-        }
-
-        renderEventList(req, res, events);
-    });
-});
-
-/**
  * @desc Shows the ticket purchase confirmation page
  * @input eventId and purchaseId from the URL, userId from session
  * @output Renders the confirmation page for that attendee's purchase
@@ -380,7 +334,7 @@ router.post(
                     return next(err);
                 }
 
-                res.redirect('/events');
+                res.redirect('/organiser/home');
             },
         );
     },

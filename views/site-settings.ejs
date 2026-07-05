@@ -6,6 +6,9 @@
 <%- include("partials/navbar") %>
 
 <div class="container py-4">
+    <a href="/organiser/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
+        &lt; Back
+    </a>
     <h1>Site Settings</h1>
 
     <form action="/organiser/settings" method="post" novalidate>
@@ -41,7 +44,6 @@
         </div>
 
         <button type="submit" class="btn btn-primary">Save Settings</button>
-        <a href="/organiser/home" class="btn btn-link">Cancel</a>
     </form>
 </div>
 </body>

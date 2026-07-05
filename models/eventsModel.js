@@ -60,14 +60,25 @@ function getOrganiserEvents(organiserId, callback) {
  * @input userId from the logged in attendee session
  * @output An array of published event rows with ticket summaries added
  */
-function getPublishedEvents(userId, callback) {
+function getPublishedEvents(userId, sortOption, callback) {
+    let orderBy = 'events.event_date ASC';
+    
+    switch (sortOption) {
+        case 'latest':
+            orderBy = 'events.event_date DESC';
+            break;
+        case 'title':
+            orderBy = 'events.event_name ASC';
+            break;
+    }
+
     const query = `
         SELECT events.*, users.user_name AS organiser_name
         FROM events
         JOIN users
         ON events.organiser_id = users.user_id
         WHERE events.status = 'published'
-        ORDER BY events.event_date ASC
+        ORDER BY ${orderBy}
     `;
 
     global.db.all(query, function (err, events) {
@@ -473,8 +484,8 @@ function publishEvent(eventId, organiserId, callback) {
     const query = `
         UPDATE events
         SET status = 'published',
-            published_at = CURRENT_TIMESTAMP,
-            updated_at = CURRENT_TIMESTAMP
+            published_at = datetime('now', 'localtime')
+            updated_at = datetime('now', 'localtime')
         WHERE event_id = ?
         AND organiser_id = ?
         AND status = 'draft'
@@ -688,7 +699,7 @@ function updateEvent(eventId, organiserId, eventData, callback) {
             description = ?,
             event_date = ?,
             location = ?,
-            updated_at = CURRENT_TIMESTAMP
+            updated_at = datetime('now', 'localtime')
         WHERE event_id = ?
         AND organiser_id = ?
     `;

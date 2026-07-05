@@ -115,6 +115,8 @@ app.get('/organiser/home', requireLogin, function (req, res) {
         if (err) {
             return res.status(500).send('Could not load events');
         }
+        
+        const sortOption = req.query.sort || "earliest";
 
         res.render('organiser-home.ejs', {
             userName: req.session.userName,
@@ -126,6 +128,7 @@ app.get('/organiser/home', requireLogin, function (req, res) {
                 return event.status === 'published';
             }),
             role: 'organiser',
+            sortOption: sortOption,
         });
     });
 });
@@ -140,18 +143,25 @@ app.get('/attendee/home', requireLogin, function (req, res) {
         return res.redirect('/organiser/home');
     }
 
-    eventModel.getPublishedEvents(req.session.userId, function (err, events) {
-        if (err) {
-            return res.status(500).send('Could not load events');
-        }
+    const sortOption = req.query.sort || "earliest";
 
-        res.render('attendee-home.ejs', {
-            userName: req.session.userName,
-            settings: req.settings,
-            events: events,
-            role: 'attendee',
-        });
-    });
+    eventModel.getPublishedEvents(
+        req.session.userId,
+        sortOption,
+        function (err, events) {
+            if (err) {
+                return res.status(500).send("Could not load events");
+            }
+
+            res.render("attendee-home.ejs", {
+                userName: req.session.userName,
+                settings: req.settings,
+                publishedEvents: events,
+                role: "attendee",
+                sortOption: sortOption,
+            });
+        },
+    );
 });
 
 /**
