@@ -85,45 +85,21 @@ function insertNextUser(users) {
 
             const userId = this.lastID;
 
-            insertUserEmails(userId, user.emails, function () {
+            const emailQuery = `
+                INSERT INTO email_accounts (email_address, user_id)
+                VALUES (?, ?)
+            `;
+
+            global.db.run(emailQuery, [user.email, userId], function (err) {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+
                 insertNextUser(users);
             });
         });
     });
-}
-
-/**
- * @desc Adds email accounts for one seed user
- * @input User id and list of email addresses
- * @output Inserts email rows linked to the user
- */
-function insertUserEmails(userId, emails, callback) {
-    const remainingEmails = emails.slice();
-
-    function insertNextEmail() {
-        const email = remainingEmails.shift();
-
-        if (!email) {
-            callback();
-            return;
-        }
-
-        const query = `
-            INSERT INTO email_accounts (email_address, user_id)
-            VALUES (?, ?)
-        `;
-
-        global.db.run(query, [email, userId], function (err) {
-            if (err) {
-                console.log(err);
-                return;
-            }
-
-            insertNextEmail();
-        });
-    }
-
-    insertNextEmail();
 }
 
 module.exports = seedDatabase;
