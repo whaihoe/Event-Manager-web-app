@@ -230,10 +230,6 @@ app.post('/organiser/settings', requireLogin, function (req, res) {
     });
 });
 
-// Add all the route handlers in usersRoutes to the app under the path /users
-const usersRoutes = require('./routes/users');
-app.use('/users', usersRoutes);
-
 // Add all the route handlers in authRoutes to the app under the path /auth
 const authRoutes = require('./routes/auth');
 app.use('/auth', authRoutes);

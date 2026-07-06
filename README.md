@@ -6,16 +6,10 @@ The app is an event manager where an organiser can create and publish events, an
 
 ## How to run
 
-Install the packages first:
+For first-time setup, run:
 
 ```bash
-npm install
-```
-
-Build the SQLite database:
-
-```bash
-npm run build-db
+npm run first-start
 ```
 
 Start the app:

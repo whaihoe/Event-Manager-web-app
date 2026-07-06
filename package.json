@@ -4,12 +4,10 @@
     "description": "A template for the mid-term assignment",
     "main": "index.js",
     "scripts": {
-        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check routes/users.js && node --check models/eventsModel.js && node --check seed.js",
+        "start": "node index.js",
         "build-db": "node scripts/build-db.js",
-        "clean-db": "rm database.db #remove the old database",
-        "build-db-win": "sqlite3 database.db < db_schema.sql",
-        "clean-db-win": "del database.db",
-        "start": "node index.js"
+        "first-start": "npm install && npm run build-db && npm start",
+        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check models/eventsModel.js && node --check seed.js"
     },
     "author": "Kwok Whai Hoe",
     "license": "ISC",
