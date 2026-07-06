@@ -63,6 +63,9 @@ app.use(function (req, res, next) {
     res.locals.currentUserName = req.session.userName;
     res.locals.currentUserRole = req.session.userRole;
 
+    res.locals.successMessage = req.session.successMessage;
+    delete req.session.successMessage;
+
     getSiteSettings(function (err, settings) {
         if (err || !settings) {
             settings = {

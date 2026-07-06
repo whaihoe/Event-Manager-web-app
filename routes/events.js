@@ -310,7 +310,11 @@ router.post(
                     return next(err);
                 }
 
-                res.redirect(`/events/${req.params.eventId}/edit`);
+                req.session.successMessage = 'Event published successfully. Attendees can now view and book it.';
+
+                const redirectBack = req.get('Referrer') || '/organiser/home';
+
+                res.redirect(redirectBack);
             },
         );
     },
@@ -550,6 +554,8 @@ router.post(
                                             if (err) {
                                                 return next(err);
                                             }
+
+                                            req.session.successMessage = 'Event saved and published successfully.';
 
                                             res.redirect(
                                                 `/events/${req.params.eventId}/edit`,

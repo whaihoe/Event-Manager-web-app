@@ -43,8 +43,8 @@ function getOrganiserEvents(organiserId, sortOption, callback) {
         case 'latest':
             orderBy = 'events.event_date DESC';
             break;
-        case 'title':
-            orderBy = 'events.event_name ASC';
+        case 'earliest':
+            orderBy = 'events.event_date ASC';
             break;
     }
 
@@ -78,8 +78,8 @@ function getPublishedEvents(userId, sortOption, callback) {
         case 'latest':
             orderBy = 'events.event_date DESC';
             break;
-        case 'title':
-            orderBy = 'events.event_name ASC';
+        case 'earliest':
+            orderBy = 'events.event_date ASC';
             break;
     }
 
@@ -495,7 +495,7 @@ function publishEvent(eventId, organiserId, callback) {
     const query = `
         UPDATE events
         SET status = 'published',
-            published_at = datetime('now', 'localtime')
+            published_at = datetime('now', 'localtime'),
             updated_at = datetime('now', 'localtime')
         WHERE event_id = ?
         AND organiser_id = ?
