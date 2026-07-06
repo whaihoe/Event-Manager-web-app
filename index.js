@@ -111,12 +111,12 @@ app.get('/organiser/home', requireLogin, function (req, res) {
         return res.redirect('/attendee/home');
     }
 
-    eventModel.getOrganiserEvents(req.session.userId, function (err, events) {
+    const sortOption = req.query.sort || "earliest";
+
+    eventModel.getOrganiserEvents(req.session.userId, sortOption, function (err, events) {
         if (err) {
             return res.status(500).send('Could not load events');
-        }
-        
-        const sortOption = req.query.sort || "earliest";
+        }   
 
         res.render('organiser-home.ejs', {
             userName: req.session.userName,

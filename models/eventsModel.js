@@ -36,14 +36,25 @@ function runEach(items, eachItem, callback) {
  * @input organiserId from the logged in session
  * @output An array of event rows with ticket summaries added
  */
-function getOrganiserEvents(organiserId, callback) {
+function getOrganiserEvents(organiserId, sortOption, callback) {
+    let orderBy = 'events.event_date ASC';
+
+    switch (sortOption) {
+        case 'latest':
+            orderBy = 'events.event_date DESC';
+            break;
+        case 'title':
+            orderBy = 'events.event_name ASC';
+            break;
+    }
+
     const query = `
         SELECT events.*, users.user_name AS organiser_name
         FROM events
         JOIN users
         ON events.organiser_id = users.user_id
         WHERE events.organiser_id = ?
-        ORDER BY events.event_date ASC
+        ORDER BY ${orderBy}
     `;
 
     global.db.all(query, [organiserId], function (err, events) {
