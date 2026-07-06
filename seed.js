@@ -4,20 +4,20 @@ const seedUsers = [
     {
         user_name: 'Simon Star',
         role: 'organiser',
+        email: 'simon@gmail.com',
         password: 'password123',
-        emails: ['simon@gmail.com', 'simon@hotmail.com'],
     },
     {
         user_name: 'Dianne Dean',
         role: 'attendee',
+        email: 'dianne@yahoo.co.uk',
         password: 'password123',
-        emails: ['dianne@yahoo.co.uk'],
     },
     {
         user_name: 'Harry Hilbert',
         role: 'attendee',
+        email: 'harry@example.com',
         password: 'password123',
-        emails: [],
     },
 ];
 
