@@ -706,6 +706,10 @@ textarea.form-control {
     margin-left: clamp(0rem, 4vw, 4rem);
 }
 
+.preview-card:nth-child(1), .preview-card:nth-child(3) {
+    margin-right: clamp(0rem, 4vw, 4rem);
+}
+
 .preview-card span {
     color: var(--accent-hover);
     font-size: 0.78rem;
@@ -787,16 +791,5 @@ textarea.form-control {
 
     .form-actions .btn {
         width: 100%;
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
     }
 }
