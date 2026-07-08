@@ -2,7 +2,7 @@
 
 This is my CM2040 Databases, Network and the Web midterm coursework project.
 
-The app is an event manager where an organiser can create and publish events, and attendees can view published events and book tickets.
+The app is an event manager where an organiser can create and publish events, and attendees can view published events and book tickets using a fake wallet balance.
 
 ## How to run
 
@@ -48,6 +48,7 @@ You can also register a new organiser or attendee account from the register page
 | Organiser Home Page | `/organiser/home` |
 | Attendee Home Page | `/attendee/home` |
 | Site Settings Page | `/organiser/settings` |
+| My Wallet Page | `/wallet` |
 | Attendee Event Page | `/events/:eventId` |
 | Organiser Edit Event Page | `/events/:eventId/edit` |
 | Purchase Confirmation Page | `/events/:eventId/purchases/:purchaseId/confirmation` |
@@ -66,6 +67,13 @@ You can also register a new organiser or attendee account from the register page
 - Events can be deleted by the organiser
 - Published events can be shared using a copy link button
 - Attendees can view published events and book tickets
+- Logged in users have a fake wallet
+- Users can top up the wallet from `/wallet`
+- The fake top up form validates the amount, card number, expiry date and CVV
+- Fake card details are not stored in the database
+- Ticket bookings check the attendee wallet balance before saving the purchase
+- When tickets are booked, money is deducted from the attendee wallet and added to the organiser wallet
+- Wallet transaction records are created for top ups, ticket payments and ticket sales
 - Attendees cannot book more tickets than the amount available
 - Attendees can see the tickets they have already booked for an event
 - The confirmation page shows all ticket types included in one purchase
@@ -89,8 +97,12 @@ The main tables are:
 - `event_attendees`
 - `ticket_purchases`
 - `purchase_ticket_items`
+- `wallets`
+- `wallet_transactions`
 
 I used `ticket_purchases` as the main purchase record, and `purchase_ticket_items` to store the ticket types inside the purchase. This means one purchase can include both full price and concession tickets.
+
+The `wallets` table stores each user's fake wallet balance. The `wallet_transactions` table records top ups, attendee ticket payments and organiser ticket sale income. Card numbers, expiry dates and CVV values are only used for fake validation and are not stored.
 
 The `seed.js` file only adds default users after the database has been built. The table structure itself comes from `db_schema.sql`.
 
@@ -106,7 +118,9 @@ The `seed.js` file only adds default users after the database has been built. Th
 index.js                         Main Express app file
 routes/auth.js                   Login, register and logout routes
 routes/events.js                 Event, booking and ticket routes
+routes/wallet.js                 Fake wallet and top up routes
 models/eventsModel.js            Event and ticket database functions
+models/walletModel.js            Wallet balance and transaction functions
 middleware/auth.js               Checks if a user is logged in
 middleware/roles.js              Checks the user's role
 views/                           EJS templates

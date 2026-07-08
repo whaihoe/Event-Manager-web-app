@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const walletModel = require('../models/walletModel.js');
 const VALID_ROLES = ['organiser', 'attendee'];
 
 /**
@@ -147,14 +148,23 @@ router.post('/register', async function (req, res, next) {
                                 return next(err);
                             }
 
-                            req.session.userId = userId;
-                            req.session.userName = userName;
-                            req.session.userRole = role;
-                            if (role === 'organiser') {
-                                res.redirect('/organiser/home');
-                            } else {
-                                res.redirect('/attendee/home');
-                            }
+                            walletModel.createWalletIfNeeded(
+                                userId,
+                                function (err) {
+                                    if (err) {
+                                        return next(err);
+                                    }
+
+                                    req.session.userId = userId;
+                                    req.session.userName = userName;
+                                    req.session.userRole = role;
+                                    if (role === 'organiser') {
+                                        res.redirect('/organiser/home');
+                                    } else {
+                                        res.redirect('/attendee/home');
+                                    }
+                                },
+                            );
                         },
                     );
                     

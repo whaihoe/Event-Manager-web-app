@@ -218,6 +218,22 @@ function validatePurchaseForm(req, tickets) {
 }
 
 /**
+ * @desc Shows the attendee event page again when a ticket purchase fails
+ * @input Page data, validation data and error message
+ * @output Renders attendee-details.ejs with an error
+ */
+function renderPurchaseError(res, pageData, validation, message) {
+    res.render('events/attendee-details.ejs', {
+        event: pageData.event,
+        tickets: pageData.tickets,
+        errors: {
+            tickets: message,
+        },
+        formData: validation.formData,
+    });
+}
+
+/**
  * @desc Shows the ticket purchase confirmation page
  * @input eventId and purchaseId from the URL, userId from session
  * @output Renders the confirmation page for that attendee's purchase
@@ -412,15 +428,35 @@ router.post(
                     });
                 }
 
-                eventModel.createTicketPurchase(
+                eventModel.createPaidTicketPurchase(
                     req.params.eventId,
                     req.session.userId,
                     validation.attendeeName,
                     validation.selectedTickets,
                     function (err, purchaseId) {
                         if (err) {
+                            if (err.code === 'INSUFFICIENT_FUNDS') {
+                                return renderPurchaseError(
+                                    res,
+                                    pageData,
+                                    validation,
+                                    'You do not have enough wallet balance to book these tickets.',
+                                );
+                            }
+
+                            if (err.code === 'NOT_ENOUGH_TICKETS') {
+                                return renderPurchaseError(
+                                    res,
+                                    pageData,
+                                    validation,
+                                    'Not enough tickets are available anymore.',
+                                );
+                            }
+
                             return next(err);
                         }
+
+                        req.session.successMessage = 'Ticket booked successfully.';
 
                         res.redirect(
                             `/events/${req.params.eventId}/purchases/${purchaseId}/confirmation`,

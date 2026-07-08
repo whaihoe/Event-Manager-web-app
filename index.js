@@ -11,6 +11,7 @@ const seedDatabase = require('./seed');
 const session = require('express-session');
 const requireLogin = require('./middleware/auth.js');
 const eventModel = require('./models/eventsModel.js');
+const walletModel = require('./models/walletModel.js');
 
 app.use(express.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
@@ -62,9 +63,13 @@ app.use(function (req, res, next) {
     res.locals.currentUserId = req.session.userId;
     res.locals.currentUserName = req.session.userName;
     res.locals.currentUserRole = req.session.userRole;
+    res.locals.walletBalance = null;
 
     res.locals.successMessage = req.session.successMessage;
     delete req.session.successMessage;
+
+    res.locals.errorMessage = req.session.errorMessage;
+    delete req.session.errorMessage;
 
     getSiteSettings(function (err, settings) {
         if (err || !settings) {
@@ -77,7 +82,20 @@ app.use(function (req, res, next) {
         res.locals.settings = settings;
         req.settings = settings;
 
-        next();
+        if (!req.session.userId) {
+            return next();
+        }
+
+        walletModel.getWalletBalance(req.session.userId, function (err, balance) {
+            if (err) {
+                console.log(err);
+                res.locals.walletBalance = null;
+            } else {
+                res.locals.walletBalance = balance;
+            }
+
+            next();
+        });
     });
 });
 
@@ -237,6 +255,10 @@ app.use('/auth', authRoutes);
 // Add all the route handlers in eventsRoutes to the app under the path /events
 const eventsRoutes = require('./routes/events');
 app.use('/events', eventsRoutes);
+
+// Add all the route handlers in walletRoutes to the app under the path /wallet
+const walletRoutes = require('./routes/wallet');
+app.use('/wallet', walletRoutes);
 
 // Make the web application listen for HTTP requests
 app.listen(port, () => {

@@ -24,7 +24,7 @@ const seedUsers = [
 /**
  * @desc Adds default users so the marker can test the app without registering first
  * @input Existing database tables created from db_schema.sql
- * @output Inserts seed users and email accounts if the users table is empty
+ * @output Inserts seed users and makes sure every user has a wallet
  */
 function seedDatabase() {
     const query = `
@@ -40,7 +40,7 @@ function seedDatabase() {
 
         // If users already exist, I do not want to insert duplicate seed accounts.
         if (row.count > 0) {
-            return;
+            return createMissingWallets();
         }
 
         insertNextUser(seedUsers.slice());
@@ -48,9 +48,28 @@ function seedDatabase() {
 }
 
 /**
+ * @desc Creates wallets for any users that do not have one yet
+ * @input Existing users table
+ * @output Inserts missing wallet rows only
+ */
+function createMissingWallets() {
+    const query = `
+        INSERT OR IGNORE INTO wallets (user_id)
+        SELECT user_id
+        FROM users
+    `;
+
+    global.db.run(query, function (err) {
+        if (err) {
+            console.log(err);
+        }
+    });
+}
+
+/**
  * @desc Inserts each seed user one by one
  * @input Array of seed user objects
- * @output Inserts users and their email accounts
+ * @output Inserts users, their email accounts and wallet rows
  */
 function insertNextUser(users) {
     const user = users.shift();
@@ -96,7 +115,18 @@ function insertNextUser(users) {
                     return;
                 }
 
-                insertNextUser(users);
+                global.db.run(
+                    'INSERT OR IGNORE INTO wallets (user_id) VALUES (?)',
+                    [userId],
+                    function (err) {
+                        if (err) {
+                            console.log(err);
+                            return;
+                        }
+
+                        insertNextUser(users);
+                    },
+                );
             });
         });
     });

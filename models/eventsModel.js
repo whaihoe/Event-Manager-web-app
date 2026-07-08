@@ -4,6 +4,8 @@
  * The route file should mainly decide what page to show, while this file handles the SQL.
  */
 
+const walletModel = require('./walletModel.js');
+
 /**
  * @desc Runs a function for each item in order
  * @input items array, eachItem function and callback
@@ -513,6 +515,21 @@ function publishEvent(eventId, organiserId, callback) {
 function deleteEvent(eventId, organiserId, callback) {
     const query_parameters = [eventId, organiserId];
 
+    const clearWalletTransactionsQuery = `
+        UPDATE wallet_transactions
+        SET related_purchase_id = NULL
+        WHERE related_purchase_id IN (
+            SELECT purchase_id
+            FROM ticket_purchases
+            WHERE event_id = ?
+            AND event_id IN (
+                SELECT event_id
+                FROM events
+                WHERE organiser_id = ?
+            )
+        )
+    `;
+
     const deleteAttendeesQuery = `
         DELETE FROM event_attendees
         WHERE event_id = ?
@@ -564,27 +581,33 @@ function deleteEvent(eventId, organiserId, callback) {
     `;
 
     // These deletes are done in order because the other tables depend on events.
-    global.db.run(deleteAttendeesQuery, query_parameters, function (err) {
+    global.db.run(clearWalletTransactionsQuery, query_parameters, function (err) {
         if (err) {
             return callback(err);
         }
 
-        global.db.run(deletePurchaseItemsQuery, query_parameters, function (err) {
+        global.db.run(deleteAttendeesQuery, query_parameters, function (err) {
             if (err) {
                 return callback(err);
             }
 
-            global.db.run(deletePurchasesQuery, query_parameters, function (err) {
+            global.db.run(deletePurchaseItemsQuery, query_parameters, function (err) {
                 if (err) {
                     return callback(err);
                 }
 
-                global.db.run(deleteTicketsQuery, query_parameters, function (err) {
+                global.db.run(deletePurchasesQuery, query_parameters, function (err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    global.db.run(deleteEventQuery, query_parameters, callback);
+                    global.db.run(deleteTicketsQuery, query_parameters, function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        global.db.run(deleteEventQuery, query_parameters, callback);
+                    });
                 });
             });
         });
@@ -801,15 +824,215 @@ function addAttendee(eventId, userId, callback) {
 }
 
 /**
- * @desc Adds one purchase record and the ticket types inside it
+ * @desc Creates a paid ticket purchase and transfers fake wallet money
  * @input eventId, userId, attendee name and selected tickets
- * @output The new purchase id
+ * @output The new purchase id if the wallet payment succeeds
  */
-function createTicketPurchase(
+function createPaidTicketPurchase(
     eventId,
     userId,
     attendeeName,
     selectedTickets,
+    callback,
+) {
+    global.db.run('BEGIN TRANSACTION', function (err) {
+        if (err) {
+            return callback(err);
+        }
+
+        getPurchasePaymentData(
+            eventId,
+            userId,
+            selectedTickets,
+            function (err, paymentData) {
+                if (err) {
+                    return rollbackPurchase(err, callback);
+                }
+
+                savePurchaseRows(
+                    eventId,
+                    userId,
+                    attendeeName,
+                    paymentData.selectedTickets,
+                    paymentData.attendeeWallet,
+                    paymentData.organiserWallet,
+                    paymentData.totalPrice,
+                    function (err, purchaseId) {
+                        if (err) {
+                            return rollbackPurchase(err, callback);
+                        }
+
+                        global.db.run('COMMIT', function (err) {
+                            if (err) {
+                                return rollbackPurchase(err, callback);
+                            }
+
+                            callback(null, purchaseId);
+                        });
+                    },
+                );
+            },
+        );
+    });
+}
+
+/**
+ * @desc Rolls back the ticket purchase if any payment step fails
+ * @input Error from the failed step and final callback
+ * @output Rolls back the database transaction
+ */
+function rollbackPurchase(err, callback) {
+    global.db.run('ROLLBACK', function () {
+        callback(err);
+    });
+}
+
+/**
+ * @desc Loads the event and checks the ticket prices for a purchase
+ * @input eventId, attendee userId and selected tickets from the form
+ * @output Data needed to save the purchase
+ */
+function getPurchasePaymentData(eventId, userId, selectedTickets, callback) {
+    getPublishedEventById(eventId, function (err, event) {
+        if (err) {
+            return callback(err);
+        }
+
+        if (!event) {
+            return callback(makePaymentError('EVENT_NOT_FOUND'));
+        }
+
+        getTicketsForEvent(eventId, function (err, tickets) {
+            if (err) {
+                return callback(err);
+            }
+
+            const paymentDetails = checkTicketPayment(
+                tickets,
+                selectedTickets,
+            );
+
+            if (paymentDetails.error) {
+                return callback(paymentDetails.error);
+            }
+
+            getWalletsForPurchase(
+                userId,
+                event.organiser_id,
+                paymentDetails,
+                callback,
+            );
+        });
+    });
+}
+
+/**
+ * @desc Gets both wallets and checks balance if the booking is not free
+ * @input Attendee id, organiser id and calculated payment details
+ * @output Payment data with attendee and organiser wallet rows
+ */
+function getWalletsForPurchase(
+    userId,
+    organiserId,
+    paymentDetails,
+    callback,
+) {
+    walletModel.createWalletIfNeeded(userId, function (err, attendeeWallet) {
+        if (err) {
+            return callback(err);
+        }
+
+        walletModel.createWalletIfNeeded(
+            organiserId,
+            function (err, organiserWallet) {
+                if (err) {
+                    return callback(err);
+                }
+
+                if (
+                    paymentDetails.totalPrice > 0 &&
+                    Number(attendeeWallet.balance) < paymentDetails.totalPrice
+                ) {
+                    return callback(makePaymentError('INSUFFICIENT_FUNDS'));
+                }
+
+                callback(null, {
+                    attendeeWallet: attendeeWallet,
+                    organiserWallet: organiserWallet,
+                    selectedTickets: paymentDetails.selectedTickets,
+                    totalPrice: paymentDetails.totalPrice,
+                });
+            },
+        );
+    });
+}
+
+/**
+ * @desc Creates a small error with a code used by the route
+ * @input Error code string
+ * @output Error object
+ */
+function makePaymentError(code) {
+    const error = new Error(code);
+    error.code = code;
+    return error;
+}
+
+/**
+ * @desc Rechecks ticket availability and works out the total price
+ * @input Ticket rows from the database and selected tickets from the form
+ * @output Selected ticket rows with database prices and total price
+ */
+function checkTicketPayment(tickets, selectedTickets) {
+    let totalPrice = 0;
+    const checkedTickets = [];
+
+    for (let i = 0; i < selectedTickets.length; i++) {
+        const selectedTicket = selectedTickets[i];
+        const matchingTicket = tickets.find(function (ticket) {
+            return String(ticket.ticket_id) === String(selectedTicket.ticket_id);
+        });
+
+        if (!matchingTicket) {
+            return { error: makePaymentError('INVALID_TICKET') };
+        }
+
+        const remainingTickets =
+            matchingTicket.quantity_available - matchingTicket.quantity_sold;
+
+        if (selectedTicket.quantity > remainingTickets) {
+            return { error: makePaymentError('NOT_ENOUGH_TICKETS') };
+        }
+
+        checkedTickets.push({
+            ticket_id: matchingTicket.ticket_id,
+            quantity: selectedTicket.quantity,
+            price: Number(matchingTicket.price),
+            ticket_type: matchingTicket.ticket_type,
+        });
+
+        totalPrice += Number(matchingTicket.price) * selectedTicket.quantity;
+    }
+
+    return {
+        selectedTickets: checkedTickets,
+        totalPrice: Number(totalPrice.toFixed(2)),
+    };
+}
+
+/**
+ * @desc Saves purchase rows and records the wallet side of the booking
+ * @input Purchase details, wallets and total price
+ * @output New purchase id after all related rows are saved
+ */
+function savePurchaseRows(
+    eventId,
+    userId,
+    attendeeName,
+    selectedTickets,
+    attendeeWallet,
+    organiserWallet,
+    totalPrice,
     callback,
 ) {
     addAttendee(eventId, userId, function (err) {
@@ -822,46 +1045,161 @@ function createTicketPurchase(
             VALUES (?, ?, ?)
         `;
 
-        const purchaseParameters = [eventId, userId, attendeeName];
+        global.db.run(
+            purchaseQuery,
+            [eventId, userId, attendeeName],
+            function (err) {
+                if (err) {
+                    return callback(err);
+                }
 
-        global.db.run(purchaseQuery, purchaseParameters, function (err) {
+                const purchaseId = this.lastID;
+
+                runEach(
+                    selectedTickets,
+                    function (ticket, done) {
+                        const itemQuery = `
+                            INSERT INTO purchase_ticket_items (purchase_id, ticket_id, quantity)
+                            VALUES (?, ?, ?)
+                        `;
+
+                        global.db.run(
+                            itemQuery,
+                            [purchaseId, ticket.ticket_id, ticket.quantity],
+                            done,
+                        );
+                    },
+                    function (err) {
+                        if (err) {
+                            return callback(err);
+                        }
+
+                        if (totalPrice === 0) {
+                            return recordFreeTicketTransactions(
+                                attendeeWallet,
+                                organiserWallet,
+                                purchaseId,
+                                callback,
+                            );
+                        }
+
+                        transferWalletMoney(
+                            attendeeWallet,
+                            organiserWallet,
+                            totalPrice,
+                            purchaseId,
+                            callback,
+                        );
+                    },
+                );
+            },
+        );
+    });
+}
+
+/**
+ * @desc Records a free booking in both wallets without changing balances
+ * @input Attendee wallet, organiser wallet and purchase id
+ * @output Creates two zero amount wallet transaction rows
+ */
+function recordFreeTicketTransactions(
+    attendeeWallet,
+    organiserWallet,
+    purchaseId,
+    callback,
+) {
+    walletModel.createWalletTransaction(
+        attendeeWallet.wallet_id,
+        'ticket_payment',
+        0,
+        'Free ticket booking',
+        purchaseId,
+        function (err) {
             if (err) {
                 return callback(err);
             }
 
-            const purchaseId = this.lastID;
-            const ticketsToAdd = selectedTickets.slice();
-
-            function addNextTicketItem() {
-                const ticket = ticketsToAdd.shift();
-
-                if (!ticket) {
-                    return callback(null, purchaseId);
-                }
-
-                const itemQuery = `
-                    INSERT INTO purchase_ticket_items (purchase_id, ticket_id, quantity)
-                    VALUES (?, ?, ?)
-                `;
-
-                const itemParameters = [
-                    purchaseId,
-                    ticket.ticket_id,
-                    ticket.quantity,
-                ];
-
-                global.db.run(itemQuery, itemParameters, function (err) {
+            walletModel.createWalletTransaction(
+                organiserWallet.wallet_id,
+                'ticket_sale',
+                0,
+                'Free ticket booking received',
+                purchaseId,
+                function (err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    addNextTicketItem();
-                });
+                    callback(null, purchaseId);
+                },
+            );
+        },
+    );
+}
+
+/**
+ * @desc Moves fake money from attendee wallet to organiser wallet
+ * @input Attendee wallet, organiser wallet, amount and purchase id
+ * @output Updates balances and creates transaction records
+ */
+function transferWalletMoney(
+    attendeeWallet,
+    organiserWallet,
+    totalPrice,
+    purchaseId,
+    callback,
+) {
+    walletModel.deductMoneyFromWallet(
+        attendeeWallet.wallet_id,
+        totalPrice,
+        function (err) {
+            if (err) {
+                return callback(err);
             }
 
-            addNextTicketItem();
-        });
-    });
+            if (this.changes === 0) {
+                return callback(makePaymentError('INSUFFICIENT_FUNDS'));
+            }
+
+            walletModel.addMoneyToWallet(
+                organiserWallet.wallet_id,
+                totalPrice,
+                function (err) {
+                    if (err) {
+                        return callback(err);
+                    }
+
+                    walletModel.createWalletTransaction(
+                        attendeeWallet.wallet_id,
+                        'ticket_payment',
+                        totalPrice,
+                        'Ticket purchase payment',
+                        purchaseId,
+                        function (err) {
+                            if (err) {
+                                return callback(err);
+                            }
+
+                            walletModel.createWalletTransaction(
+                                organiserWallet.wallet_id,
+                                'ticket_sale',
+                                totalPrice,
+                                'Ticket sale received',
+                                purchaseId,
+                                function (err) {
+                                    if (err) {
+                                        return callback(err);
+                                    }
+
+                                    callback(null, purchaseId);
+                                },
+                            );
+                        },
+                    );
+                },
+            );
+        },
+    );
 }
 
 /**
@@ -961,18 +1299,13 @@ function getPurchaseConfirmation(purchaseId, eventId, userId, callback) {
 module.exports = {
     getOrganiserEvents,
     getPublishedEvents,
-    getTicketsForEvent,
-    getTicketsForAttendee,
     getAttendeeEventDetails,
     getOrganiserEventDetails,
     createEventWithTickets,
     publishEvent,
     deleteEvent,
-    getPublishedEventById,
-    getOrganiserEventById,
-    getAttendeesForEvent,
     updateEvent,
     saveEventTickets,
-    createTicketPurchase,
+    createPaidTicketPurchase,
     getPurchaseConfirmation,
 };

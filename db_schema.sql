@@ -20,6 +20,27 @@ CREATE TABLE IF NOT EXISTS email_accounts (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE IF NOT EXISTS wallets (
+    wallet_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL UNIQUE,
+    balance REAL NOT NULL DEFAULT 0 CHECK(balance >= 0),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id)
+);
+
+CREATE TABLE IF NOT EXISTS wallet_transactions (
+    wallet_transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    wallet_id INTEGER NOT NULL,
+    transaction_type TEXT NOT NULL CHECK(transaction_type IN ('top_up', 'ticket_payment', 'ticket_sale')),
+    amount REAL NOT NULL CHECK(amount >= 0),
+    description TEXT NOT NULL,
+    related_purchase_id INTEGER,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (wallet_id) REFERENCES wallets(wallet_id),
+    FOREIGN KEY (related_purchase_id) REFERENCES ticket_purchases(purchase_id)
+);
+
 CREATE TABLE IF NOT EXISTS events (
     event_id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,

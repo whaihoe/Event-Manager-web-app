@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include("../partials/head", { title: "My Wallet" }) %>
+<body>
+    <%- include("../partials/navbar") %>
+
+    <div class="container py-4">
+        <a href="/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
+            &lt; Back
+        </a>
+
+        <h1>My Wallet</h1>
+
+        <div class="mb-4">
+            <h2>Current Balance</h2>
+            <p class="fs-4">$<%= Number(walletBalance || 0).toFixed(2) %></p>
+        </div>
+
+        <h2>Top Up Wallet</h2>
+
+        <form action="/wallet/top-up" method="post" class="mb-5">
+            <div class="mb-3">
+                <label for="amount" class="form-label">Amount</label>
+                <input
+                    id="amount"
+                    class="form-control <%= errors.amount ? 'is-invalid' : '' %>"
+                    type="number"
+                    name="amount"
+                    min="0.01"
+                    step="0.01"
+                    value="<%= formData.amount || '' %>"
+                />
+                <% if (errors.amount) { %>
+                    <div class="invalid-feedback">
+                        <%= errors.amount %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="mb-3">
+                <label for="card_number" class="form-label">Fake card number</label>
+                <input
+                    id="card_number"
+                    class="form-control <%= errors.card_number ? 'is-invalid' : '' %>"
+                    type="text"
+                    name="card_number"
+                    autocomplete="off"
+                    inputmode="numeric"
+                />
+                <% if (errors.card_number) { %>
+                    <div class="invalid-feedback">
+                        <%= errors.card_number %>
+                    </div>
+                <% } %>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label for="expiry" class="form-label">Expiry date</label>
+                    <input
+                        id="expiry"
+                        class="form-control <%= errors.expiry ? 'is-invalid' : '' %>"
+                        type="month"
+                        name="expiry"
+                        value="<%= formData.expiry || '' %>"
+                    />
+                    <% if (errors.expiry) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.expiry %>
+                        </div>
+                    <% } %>
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label for="cvv" class="form-label">CVV</label>
+                    <input
+                        id="cvv"
+                        class="form-control <%= errors.cvv ? 'is-invalid' : '' %>"
+                        type="password"
+                        name="cvv"
+                        autocomplete="off"
+                        inputmode="numeric"
+                        maxlength="3"
+                    />
+                    <% if (errors.cvv) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.cvv %>
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Top Up</button>
+        </form>
+
+        <h2>Recent Transactions</h2>
+
+        <% if (transactions.length === 0) { %>
+            <p>No wallet transactions yet.</p>
+        <% } else { %>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Description</th>
+                        <th>Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% transactions.forEach(function (transaction) { %>
+                        <tr>
+                            <td><%= transaction.created_at %></td>
+                            <td><%= transaction.transaction_type %></td>
+                            <td><%= transaction.description %></td>
+                            <td>$<%= Number(transaction.amount).toFixed(2) %></td>
+                        </tr>
+                    <% }) %>
+                </tbody>
+            </table>
+        <% } %>
+    </div>
+</body>
+</html>
