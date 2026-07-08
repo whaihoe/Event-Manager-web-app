@@ -3,77 +3,77 @@
 <%- include("../partials/head", { title: "Register" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <main class="container page-narrow page-shell py-4">
-        <section class="auth-card page-panel">
-            <p class="eyebrow">Create Account</p>
+    <main class="container app-narrow app-shell py-4">
+        <section class="auth-card app-panel">
+            <p class="app-kicker">Create Account</p>
             <h1>Register</h1>
             <form action="/auth/register" method="post" novalidate>
-            <div class="mb-3">
-                <label for="user_name" class="form-label">Name</label>
-                <input
-                    id="user_name"
-                    class="form-control <%= errors.user_name ? 'is-invalid' : '' %>"
-                    type="text"
-                    name="user_name"
-                    value="<%= formData.user_name %>"
-                />
-                <% if (errors.user_name) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.user_name %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mb-3">
-                <label for="email_address" class="form-label">Email</label>
-                <input
-                    id="email_address"
-                    class="form-control <%= errors.email_address ? 'is-invalid' : '' %>"
-                    type="email"
-                    name="email_address"
-                    value="<%= formData.email_address %>"
-                />
-                <% if (errors.email_address) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.email_address %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password</label>
-                <input
-                    id="password"
-                    class="form-control <%= errors.password ? 'is-invalid' : '' %>"
-                    type="password"
-                    name="password"
-                />
-                <% if (errors.password) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.password %>
-                    </div>
-                <% } %>
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">Account role</label>
-                <select
-                    id="role"
-                    class="form-select <%= errors.role ? 'is-invalid' : '' %>"
-                    name="role"
-                >
-                    <option value="attendee" <%= formData.role === "attendee" ? "selected" : "" %>>
-                        Attendee
-                    </option>
-                    <option value="organiser" <%= formData.role === "organiser" ? "selected" : "" %>>
-                        Organiser
-                    </option>
-                </select>
-                <% if (errors.role) { %>
-                    <div class="invalid-feedback">
-                        <%= errors.role %>
-                    </div>
-                <% } %>
-            </div>
-            <button type="submit" class="btn btn-primary">Register</button>
-            <a href="/auth/login" class="btn btn-link">Already have an account?</a>
+                <div class="mb-3">
+                    <label for="user_name" class="form-label">Name</label>
+                    <input
+                        id="user_name"
+                        class="form-control <%= errors.user_name ? 'is-invalid' : '' %>"
+                        type="text"
+                        name="user_name"
+                        value="<%= formData.user_name %>"
+                    />
+                    <% if (errors.user_name) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.user_name %>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="mb-3">
+                    <label for="email_address" class="form-label">Email</label>
+                    <input
+                        id="email_address"
+                        class="form-control <%= errors.email_address ? 'is-invalid' : '' %>"
+                        type="email"
+                        name="email_address"
+                        value="<%= formData.email_address %>"
+                    />
+                    <% if (errors.email_address) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.email_address %>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input
+                        id="password"
+                        class="form-control <%= errors.password ? 'is-invalid' : '' %>"
+                        type="password"
+                        name="password"
+                    />
+                    <% if (errors.password) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.password %>
+                        </div>
+                    <% } %>
+                </div>
+                <div class="mb-3">
+                    <label for="role" class="form-label">Account role</label>
+                    <select
+                        id="role"
+                        class="form-select <%= errors.role ? 'is-invalid' : '' %>"
+                        name="role"
+                    >
+                        <option value="attendee" <%= formData.role === "attendee" ? "selected" : "" %>>
+                            Attendee
+                        </option>
+                        <option value="organiser" <%= formData.role === "organiser" ? "selected" : "" %>>
+                            Organiser
+                        </option>
+                    </select>
+                    <% if (errors.role) { %>
+                        <div class="invalid-feedback">
+                            <%= errors.role %>
+                        </div>
+                    <% } %>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+                <a href="/auth/login" class="btn btn-link">Already have an account?</a>
             </form>
         </section>
     </main>

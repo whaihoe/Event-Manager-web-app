@@ -3,18 +3,18 @@
 <%- include("../partials/head", { title: "Event Details" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <main class="container page-shell py-4">
+    <main class="container app-shell py-4">
         <a href="/attendee/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
             &lt; Back
         </a>
-        <section class="dashboard-hero mb-4">
-            <p class="eyebrow">Event Details</p>
-            <h1 class="page-title">Attendee Event Page</h1>
-            <p class="page-subtitle"><%= event.title %></p>
+        <section class="app-hero mb-4">
+            <p class="app-kicker">Event Details</p>
+            <h1 class="app-title">Attendee Event Page</h1>
+            <p class="app-subtitle"><%= event.title %></p>
         </section>
 
 
-        <div class="page-panel p-4 mb-4">
+        <div class="app-panel p-4 mb-4">
             <p><strong>Date:</strong> <%= event.event_date %></p>
             <p><strong>Location:</strong> <%= event.location %></p>
             <p><strong>Organiser:</strong> <%= event.organiser_name %></p>
@@ -47,7 +47,7 @@
                 <% } %>
             </div>
 
-            <div class="table-wrap mb-3">
+            <div class="app-table mb-3">
                 <table class="table table-bordered">
                     <thead>
                         <tr>

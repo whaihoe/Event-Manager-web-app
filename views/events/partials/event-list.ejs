@@ -1,4 +1,4 @@
-<div class="section-heading">
+<div class="app-section-header">
     <h2 class="mb-0">Published Events</h2>
 
     <form method="get" action="/<%= currentUserRole %>/home">
@@ -33,8 +33,7 @@
     <% publishedEvents.forEach(function(event) { %>
         <%- include("event-card", {
             event: event,
-            role: role,
-            actionText: "Manage Event"
+            role: role
         }) %>
     <% }) %>
 </div>

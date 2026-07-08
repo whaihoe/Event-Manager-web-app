@@ -3,14 +3,14 @@
 <%- include("../partials/head", { title: "Purchase Confirmed" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <main class="container page-shell py-4">
+    <main class="container app-shell py-4">
         <div class="alert alert-success">
             Your ticket purchase has been confirmed.
         </div>
 
-        <section class="dashboard-hero mb-4">
-            <p class="eyebrow">Purchase Confirmed</p>
-            <h1 class="page-title"><%= purchase.title %></h1>
+        <section class="app-hero mb-4">
+            <p class="app-kicker">Purchase Confirmed</p>
+            <h1 class="app-title"><%= purchase.title %></h1>
 
             <p><strong>Attendee:</strong> <%= purchase.attendee_name %></p>
             <p><strong>Date:</strong> <%= purchase.event_date %></p>
@@ -19,7 +19,7 @@
         </section>
 
         <h2>Tickets Purchased</h2>
-        <div class="table-wrap mb-3">
+        <div class="app-table mb-3">
             <table class="table table-bordered">
                 <thead>
                     <tr>

@@ -3,20 +3,20 @@
 <%- include("../partials/head", { title: "Edit Event" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <main class="container page-shell py-4">
+    <main class="container app-shell py-4">
         <a href="/organiser/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
             &lt; Back
         </a>
-        <section class="dashboard-hero mb-4">
-            <p class="eyebrow">Event Management</p>
-            <h1 class="page-title">Organiser Edit Event Page</h1>
-            <p class="page-subtitle">
+        <section class="app-hero mb-4">
+            <p class="app-kicker">Event Management</p>
+            <h1 class="app-title">Organiser Edit Event Page</h1>
+            <p class="app-subtitle">
                 Created at: <%= event.created_at %><br>
                 Last modified at: <%= event.updated_at %>
             </p>
         </section>
 
-        <form class="page-panel p-4" action="/events/<%= event.event_id %>/edit" method="post" novalidate>
+        <form class="app-panel p-4" action="/events/<%= event.event_id %>/edit" method="post" novalidate>
             <%- include("partials/event-form-fields", {
                 errors: errors,
                 formData: formData,
@@ -24,7 +24,7 @@
                 showSoldCount: true
             }) %>
 
-            <div class="form-actions">
+            <div class="app-actions">
                 <button type="submit" class="btn btn-primary">Save Changes</button>
                 <% if (event.status === "draft") { %>
                 <button
@@ -47,7 +47,7 @@
             </div>
         </form>
 
-        <div class="section-heading">
+        <div class="app-section-header">
             <h2>Attendees</h2>
         </div>
 
@@ -56,7 +56,7 @@
                 No attendees have bought tickets for this event yet.
             </div>
         <% } else { %>
-            <div class="table-wrap">
+            <div class="app-table">
                 <table class="table table-bordered">
                     <thead>
                         <tr>

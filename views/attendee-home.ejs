@@ -5,14 +5,14 @@
 <body>
 <%- include("partials/navbar") %>
 
-    <main class="container page-shell py-5">
-        <section class="dashboard-hero">
-            <p class="eyebrow">Attendee Dashboard</p>
-            <h1 class="page-title">
+    <main class="container app-shell py-5">
+        <section class="app-hero">
+            <p class="app-kicker">Attendee Dashboard</p>
+            <h1 class="app-title">
                 Find events worth showing up for.
             </h1>
 
-            <p class="page-subtitle">
+            <p class="app-subtitle">
                 <%= settings.site_description %>
             </p>
 
@@ -24,8 +24,7 @@
 
         <%- include("events/partials/event-list",{
             publishedEvents: publishedEvents,
-            role: role,
-            actionText: "View Event Details"
+            role: role
         }) %>
     </main>
 </body>

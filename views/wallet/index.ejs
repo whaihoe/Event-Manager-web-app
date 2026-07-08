@@ -4,14 +4,14 @@
 <body>
     <%- include("../partials/navbar") %>
 
-    <main class="container page-shell py-4">
+    <main class="container app-shell py-4">
         <a href="/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
             &lt; Back
         </a>
 
-        <section class="dashboard-hero mb-4">
-            <p class="eyebrow">Wallet</p>
-            <h1 class="page-title">My Wallet</h1>
+        <section class="app-hero mb-4">
+            <p class="app-kicker">Wallet</p>
+            <h1 class="app-title">My Wallet</h1>
 
             <div class="wallet-balance mt-3">
                 <span>Current Balance</span>
@@ -21,7 +21,7 @@
 
         <h2>Top Up Wallet</h2>
 
-        <form action="/wallet/top-up" method="post" class="page-panel p-4 mb-5">
+        <form action="/wallet/top-up" method="post" class="app-panel p-4 mb-5">
             <div class="mb-3">
                 <label for="amount" class="form-label">Amount</label>
                 <input
@@ -96,14 +96,14 @@
             <button type="submit" class="btn btn-primary">Top Up</button>
         </form>
 
-        <div class="section-heading">
+        <div class="app-section-header">
             <h2>Recent Transactions</h2>
         </div>
 
         <% if (transactions.length === 0) { %>
             <p>No wallet transactions yet.</p>
         <% } else { %>
-            <div class="table-wrap">
+            <div class="app-table">
                 <table class="table table-bordered">
                     <thead>
                         <tr>
