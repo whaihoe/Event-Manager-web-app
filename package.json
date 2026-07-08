@@ -7,7 +7,7 @@
         "start": "node index.js",
         "build-db": "node scripts/build-db.js",
         "first-start": "npm install && npm run build-db && npm start",
-        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check routes/wallet.js && node --check models/eventsModel.js && node --check models/walletModel.js && node --check seed.js"
+        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check routes/wallet.js && node --check models/eventsModel.js && node --check models/walletModel.js && node --check middleware/auth.js && node --check middleware/roles.js && node --check seed.js"
     },
     "author": "Kwok Whai Hoe",
     "license": "ISC",

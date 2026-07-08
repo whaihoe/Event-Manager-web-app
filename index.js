@@ -55,6 +55,18 @@ function getSiteSettings(callback) {
 }
 
 /**
+ * @desc Renders a simple error page instead of plain Express error text
+ * @input Response, status code, page title and message
+ * @output Renders views/error.ejs
+ */
+function renderErrorPage(res, statusCode, pageTitle, message) {
+    res.status(statusCode).render('error.ejs', {
+        pageTitle: pageTitle,
+        message: message,
+    });
+}
+
+/**
  * @desc Makes common values available in all EJS pages
  * @input Session values and site settings from the database
  * @output res.locals values which can be used in templates
@@ -259,6 +271,35 @@ app.use('/events', eventsRoutes);
 // Add all the route handlers in walletRoutes to the app under the path /wallet
 const walletRoutes = require('./routes/wallet');
 app.use('/wallet', walletRoutes);
+
+/**
+ * @desc Handles pages that do not match any route
+ * @output Shows a simple 404 page
+ */
+app.use(function (req, res) {
+    renderErrorPage(
+        res,
+        404,
+        'Page Not Found',
+        'The page you are looking for does not exist.',
+    );
+});
+
+/**
+ * @desc Handles unexpected server errors
+ * @input Error passed from route handlers
+ * @output Shows a simple error page
+ */
+app.use(function (err, req, res, next) {
+    console.log(err);
+
+    renderErrorPage(
+        res,
+        500,
+        'Something Went Wrong',
+        'The app could not complete this request. Please try again.',
+    );
+});
 
 // Make the web application listen for HTTP requests
 app.listen(port, () => {

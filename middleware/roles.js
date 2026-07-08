@@ -7,9 +7,10 @@ function requireRole(role) {
     return function (req, res, next) {
         // This stops attendees from using organiser pages and organisers from using attendee booking pages.
         if (req.session.userRole !== role) {
-            return res
-                .status(403)
-                .send('You do not have permission to access this page.');
+            return res.status(403).render('error.ejs', {
+                pageTitle: 'Access Denied',
+                message: 'You do not have permission to access this page.',
+            });
         }
 
         next();
