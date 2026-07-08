@@ -1,4 +1,4 @@
-
+// To remember the scroll position of the page when it refreshes. 
 document.addEventListener("submit", function(event) {
     const form = event.target;
 
