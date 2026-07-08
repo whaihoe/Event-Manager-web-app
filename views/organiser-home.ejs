@@ -5,27 +5,25 @@
 <body>
     <%- include("partials/navbar") %>
 
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold">
-                Organiser Home Page
+    <main class="container page-shell py-5">
+        <section class="dashboard-hero">
+            <p class="eyebrow">Organiser Dashboard</p>
+            <h1 class="page-title">
+                Plan events, publish tickets and track attendees.
             </h1>
-            <h2 class="h4 text-muted">
-                <%= settings.site_name %>
-            </h2>
 
-            <p class="lead text-muted">
+            <p class="page-subtitle">
                 <%= settings.site_description %>
             </p>
 
-            <p class="text-muted">
+            <p class="text-muted mb-0 mt-3">
                 Welcome, <%= userName %>. Create and post events for attendees to buy tickets.
             </p>
-        </div>
+        </section>
 
         <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
+            <div class="col-md-4 mt-0">
+                <div class="card action-card shadow-sm h-100">
                     <div class="card-body text-center">
                         <h3 class="card-title mb-3">
                             Create Events
@@ -44,8 +42,8 @@
                 </div>
             </div>
 
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
+            <div class="col-md-4 mt-0">
+                <div class="card action-card shadow-sm h-100">
                     <div class="card-body text-center">
                         <h3 class="card-title mb-3">
                             Attendees
@@ -66,7 +64,9 @@
             </div>
         </div>
 
-        <h2 class="mt-5">Draft Events</h2>
+        <div class="section-heading">
+            <h2>Draft Events</h2>
+        </div>
         <% if (draftEvents.length === 0) { %>
             <div class="alert alert-info">
                 You do not have any draft events.
@@ -88,6 +88,6 @@
             role: role,
             actionText: "View Event Details"
         }) %>
-    </div>
+    </main>
 </body>
 </html>

@@ -5,23 +5,21 @@
 <body>
 <%- include("partials/navbar") %>
 
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold">
-                Attendee Home Page
+    <main class="container page-shell py-5">
+        <section class="dashboard-hero">
+            <p class="eyebrow">Attendee Dashboard</p>
+            <h1 class="page-title">
+                Find events worth showing up for.
             </h1>
-            <h2 class="h4 text-muted">
-                <%= settings.site_name %>
-            </h2>
 
-            <p class="lead text-muted">
+            <p class="page-subtitle">
                 <%= settings.site_description %>
             </p>
 
-            <p class="text-muted">
+            <p class="text-muted mb-0 mt-3">
                 Welcome, <%= userName %>. Browse available events and buy tickets for the ones you are interested in.
             </p>
-        </div>
+        </section>
 
 
         <%- include("events/partials/event-list",{
@@ -29,6 +27,6 @@
             role: role,
             actionText: "View Event Details"
         }) %>
-    </div>
+    </main>
 </body>
 </html>

@@ -3,15 +3,18 @@
 <%- include("../partials/head", { title: "Event Details" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <div class="container py-4">
+    <main class="container page-shell py-4">
         <a href="/attendee/home" class="btn btn-link ps-0 mb-3 text-decoration-none">
             &lt; Back
         </a>
-        <h1>Attendee Event Page</h1>
-        <h2><%= event.title %></h2>
+        <section class="dashboard-hero mb-4">
+            <p class="eyebrow">Event Details</p>
+            <h1 class="page-title">Attendee Event Page</h1>
+            <p class="page-subtitle"><%= event.title %></p>
+        </section>
 
 
-        <div class="mb-4">
+        <div class="page-panel p-4 mb-4">
             <p><strong>Date:</strong> <%= event.event_date %></p>
             <p><strong>Location:</strong> <%= event.location %></p>
             <p><strong>Organiser:</strong> <%= event.organiser_name %></p>
@@ -44,41 +47,43 @@
                 <% } %>
             </div>
 
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Ticket Type</th>
-                        <th>Price</th>
-                        <th>Available</th>
-                        <th>Your Tickets</th>
-                        <th>Quantity</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% tickets.forEach(function(ticket) { %>
-                        <% const remainingTickets = ticket.quantity_available - ticket.quantity_sold; %>
+            <div class="table-wrap mb-3">
+                <table class="table table-bordered">
+                    <thead>
                         <tr>
-                            <td><%= ticket.ticket_type %></td>
-                            <td>$<%= ticket.price %></td>
-                            <td><%= remainingTickets %></td>
-                            <td><%= ticket.quantity_bought || 0 %></td>
-                            <td>
-                                <input
-                                    class="form-control"
-                                    type="number"
-                                    name="ticket_<%= ticket.ticket_id %>"
-                                    min="0"
-                                    max="<%= remainingTickets %>"
-                                    value="<%= formData['ticket_' + ticket.ticket_id] || 0 %>"
-                                />
-                            </td>
+                            <th>Ticket Type</th>
+                            <th>Price</th>
+                            <th>Available</th>
+                            <th>Your Tickets</th>
+                            <th>Quantity</th>
                         </tr>
-                    <% }) %>
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        <% tickets.forEach(function(ticket) { %>
+                            <% const remainingTickets = ticket.quantity_available - ticket.quantity_sold; %>
+                            <tr>
+                                <td><%= ticket.ticket_type %></td>
+                                <td>$<%= ticket.price %></td>
+                                <td><%= remainingTickets %></td>
+                                <td><%= ticket.quantity_bought || 0 %></td>
+                                <td>
+                                    <input
+                                        class="form-control"
+                                        type="number"
+                                        name="ticket_<%= ticket.ticket_id %>"
+                                        min="0"
+                                        max="<%= remainingTickets %>"
+                                        value="<%= formData['ticket_' + ticket.ticket_id] || 0 %>"
+                                    />
+                                </td>
+                            </tr>
+                        <% }) %>
+                    </tbody>
+                </table>
+            </div>
 
             <button type="submit" class="btn btn-primary">Book Tickets</button>
         </form>
-    </div>
+    </main>
 </body>
 </html>

@@ -3,9 +3,11 @@
 <%- include("../partials/head", { title: "Register" }) %>
 <body>
     <%- include("../partials/navbar") %>
-    <div class="mx-5 mt-3">
-        <h1>Register</h1>
-        <form action="/auth/register" method="post" novalidate>
+    <main class="container page-narrow page-shell py-4">
+        <section class="auth-card page-panel">
+            <p class="eyebrow">Create Account</p>
+            <h1>Register</h1>
+            <form action="/auth/register" method="post" novalidate>
             <div class="mb-3">
                 <label for="user_name" class="form-label">Name</label>
                 <input
@@ -72,7 +74,8 @@
             </div>
             <button type="submit" class="btn btn-primary">Register</button>
             <a href="/auth/login" class="btn btn-link">Already have an account?</a>
-        </form>
-    </div>
+            </form>
+        </section>
+    </main>
 </body>
 </html>

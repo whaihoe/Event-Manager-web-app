@@ -2,58 +2,88 @@
 <html lang="en">
 <%- include("partials/head", { title: settings.site_name }) %>
 
-<body>
+<body class="landing-page">
     <%- include("partials/navbar") %>
 
-    <div class="container py-5">
-        <div class="text-center mb-5">
-            <h1 class="display-4 fw-bold">
+    <main class="landing-shell">
+        <section class="landing-hero" aria-labelledby="landing-title">
+            <p class="landing-kicker">Event Manager</p>
+
+            <h1 id="landing-title">
                 <%= settings.site_name %>
             </h1>
 
-            <p class="lead text-muted">
+            <p class="landing-description">
                 <%= settings.site_description %>
+                Organisers can create and publish events, while attendees can view events and book tickets.
             </p>
-        </div>
 
-        <div class="row g-4 justify-content-center">
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h2 class="h4 card-title mb-3">
-                            Organiser
-                        </h2>
+            <div class="role-choice" aria-labelledby="role-choice-title">
+                <h2 id="role-choice-title">Which one are you?</h2>
 
-                        <p class="card-text text-muted">
-                            Create, manage and publish events.
-                        </p>
-
-                        <a href="/organiser/home" class="btn btn-dark">
-                            Organiser Home
-                        </a>
-                    </div>
+                <div
+                    class="role-selector"
+                    data-role-selector
+                    data-selected="organiser"
+                    role="group"
+                    aria-label="Choose your role"
+                >
+                    <span class="role-selector-indicator" aria-hidden="true"></span>
+                    <button
+                        class="role-option is-selected"
+                        type="button"
+                        data-role-option="organiser"
+                        aria-pressed="true"
+                    >
+                        Organiser
+                    </button>
+                    <button
+                        class="role-option"
+                        type="button"
+                        data-role-option="attendee"
+                        aria-pressed="false"
+                    >
+                        Attendee
+                    </button>
                 </div>
+
+                <a
+                    class="landing-cta"
+                    href="/organiser/home"
+                    data-role-cta
+                >
+                    <span data-role-cta-text>Continue as Organiser</span>
+                    <span class="cta-arrow" aria-hidden="true">-&gt;</span>
+                </a>
+
+                <p class="role-helper" data-role-helper aria-live="polite">
+                    If you are not logged in, you will be taken to the organiser login page.
+                </p>
+            </div>
+        </section>
+
+        <aside class="landing-preview" aria-label="Event platform highlights">
+            <div class="preview-card">
+                <span>For organisers</span>
+                <strong>Create, publish and manage events</strong>
+                <p>Draft events first, then publish them when the event details and ticket prices are ready.</p>
             </div>
 
-            <div class="col-md-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <h2 class="h4 card-title mb-3">
-                            Attendee
-                        </h2>
-
-                        <p class="card-text text-muted">
-                            Browse published events and buy tickets.
-                        </p>
-
-                        <a href="/attendee/home" class="btn btn-dark">
-                            Attendee Home
-                        </a>
-                    </div>
-                </div>
+            <div class="preview-card">
+                <span>For attendees</span>
+                <strong>Browse events and book tickets</strong>
+                <p>View event details, choose ticket quantities and keep track of purchased tickets.</p>
             </div>
-        </div>
-    </div>
+
+            <div class="preview-card">
+                <span>Wallet</span>
+                <strong>Top up before checkout</strong>
+                <p>Use the wallet balance to pay for tickets and view recent transaction history.</p>
+            </div>
+        </aside>
+    </main>
+
+    <script src="/js/role-selector.js" defer></script>
 </body>
 
 </html>
