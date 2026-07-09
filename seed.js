@@ -69,7 +69,7 @@ function createMissingWallets() {
 /**
  * @desc Inserts each seed user one by one
  * @input Array of seed user objects
- * @output Inserts users, their email accounts and wallet rows
+ * @output Inserts users and their wallet rows
  */
 function insertNextUser(users) {
     const user = users.shift();
@@ -86,12 +86,13 @@ function insertNextUser(users) {
         }
 
         const query = `
-            INSERT INTO users (user_name, role, password_hash)
-            VALUES (?, ?, ?)
+            INSERT INTO users (user_name, email_address, role, password_hash)
+            VALUES (?, ?, ?, ?)
         `;
 
         const queryParameters = [
             user.user_name,
+            user.email,
             user.role,
             passwordHash,
         ];
@@ -104,30 +105,18 @@ function insertNextUser(users) {
 
             const userId = this.lastID;
 
-            const emailQuery = `
-                INSERT INTO email_accounts (email_address, user_id)
-                VALUES (?, ?)
-            `;
+            global.db.run(
+                'INSERT OR IGNORE INTO wallets (user_id) VALUES (?)',
+                [userId],
+                function (err) {
+                    if (err) {
+                        console.log(err);
+                        return;
+                    }
 
-            global.db.run(emailQuery, [user.email, userId], function (err) {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-
-                global.db.run(
-                    'INSERT OR IGNORE INTO wallets (user_id) VALUES (?)',
-                    [userId],
-                    function (err) {
-                        if (err) {
-                            console.log(err);
-                            return;
-                        }
-
-                        insertNextUser(users);
-                    },
-                );
-            });
+                    insertNextUser(users);
+                },
+            );
         });
     });
 }

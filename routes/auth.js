@@ -75,7 +75,7 @@ router.get('/register', (req, res) => {
 /**
  * @desc Registers a new user account with a role
  * @input Name, email, password and role from req.body
- * @output Creates user and email rows, then redirects to the correct home page
+ * @output Creates a user and redirects to the correct home page
  */
 router.post('/register', async function (req, res, next) {
     const userName = (req.body.user_name || '').trim();
@@ -109,7 +109,7 @@ router.post('/register', async function (req, res, next) {
 
     // Check if the email is already used by an existing user
     global.db.get(
-        'SELECT email_account_id FROM email_accounts WHERE email_address = ?',
+        'SELECT user_id FROM users WHERE email_address = ?',
         [emailAddress],
         async function (err, existingEmail) {
             if (err) {
@@ -128,46 +128,40 @@ router.post('/register', async function (req, res, next) {
 
             const passwordHash = await bcrypt.hash(password, 10);
 
-            // Add the user first so I can use the new user_id for the email table
             global.db.run(
-                'INSERT INTO users (user_name, role, password_hash) VALUES (?, ?, ?)',
-                [userName, role, passwordHash],
+                `
+                    INSERT INTO users (
+                        user_name,
+                        email_address,
+                        role,
+                        password_hash
+                    )
+                    VALUES (?, ?, ?, ?)
+                `,
+                [userName, emailAddress, role, passwordHash],
                 function (err) {
                     if (err) {
                         return next(err);
                     }
 
                     const userId = this.lastID;
-
-                    // Store the email in a separate table linked to this user
-                    global.db.run(
-                        'INSERT INTO email_accounts (email_address, user_id) VALUES (?, ?)',
-                        [emailAddress, userId],
+                    walletModel.createWalletIfNeeded(
+                        userId,
                         function (err) {
                             if (err) {
                                 return next(err);
                             }
 
-                            walletModel.createWalletIfNeeded(
-                                userId,
-                                function (err) {
-                                    if (err) {
-                                        return next(err);
-                                    }
-
-                                    req.session.userId = userId;
-                                    req.session.userName = userName;
-                                    req.session.userRole = role;
-                                    if (role === 'organiser') {
-                                        res.redirect('/organiser/home');
-                                    } else {
-                                        res.redirect('/attendee/home');
-                                    }
-                                },
-                            );
+                            req.session.userId = userId;
+                            req.session.userName = userName;
+                            req.session.userRole = role;
+                            if (role === 'organiser') {
+                                res.redirect('/organiser/home');
+                            } else {
+                                res.redirect('/attendee/home');
+                            }
                         },
                     );
-                    
                 },
             );
         },
@@ -203,9 +197,7 @@ router.post('/login', function (req, res, next) {
     const query = `
         SELECT users.user_id, users.user_name, users.password_hash, users.role
         FROM users
-        JOIN email_accounts
-        ON users.user_id = email_accounts.user_id
-        WHERE email_accounts.email_address = ?
+        WHERE users.email_address = ?
     `;
 
     const query_parameters = [emailAddress];

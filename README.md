@@ -132,7 +132,6 @@ db_schema.sql
 The main tables are:
 
 - `users`
-- `email_accounts`
 - `site_settings`
 - `events`
 - `event_tickets`

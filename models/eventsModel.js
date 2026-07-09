@@ -675,13 +675,11 @@ function getAttendeesForEvent(eventId, callback) {
         SELECT
             users.user_id,
             users.user_name,
-            email_accounts.email_address,
+            users.email_address,
             event_attendees.joined_at
         FROM event_attendees
         JOIN users
         ON event_attendees.user_id = users.user_id
-        LEFT JOIN email_accounts
-        ON users.user_id = email_accounts.user_id
         WHERE event_attendees.event_id = ?
         ORDER BY users.user_name ASC
     `;
