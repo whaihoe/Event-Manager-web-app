@@ -61,7 +61,6 @@ CREATE TABLE IF NOT EXISTS event_tickets (
     ticket_type TEXT NOT NULL,
     quantity_available INTEGER NOT NULL CHECK(quantity_available > 0),
     price REAL NOT NULL CHECK(price >= 0),
-    UNIQUE (event_id, ticket_type),
     FOREIGN KEY (event_id) REFERENCES events(event_id)
 );
 
