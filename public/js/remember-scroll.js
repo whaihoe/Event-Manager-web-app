@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * @purpose Saves the page position before an event form is submitted
  * @input Browser submit event
@@ -43,3 +44,4 @@ function restoreScrollPosition(savedScrollY) {
 
 document.addEventListener('submit', rememberScrollPosition);
 window.addEventListener('load', loadSavedScrollPosition);
+// ===== END OF MY CODE =====

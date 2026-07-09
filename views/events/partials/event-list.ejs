@@ -1,3 +1,4 @@
+<%# ===== START OF MY CODE ===== %>
 <div class="app-section-header">
     <h2 class="mb-0">Published Events</h2>
 
@@ -22,7 +23,6 @@
         </select>
     </form>
 </div>
-
 <% if (publishedEvents.length === 0) { %>
     <div class="alert alert-info">
         You do not have any published events.
@@ -34,3 +34,4 @@
         <%- include("event-card", { event: event }) %>
     <% }) %>
 </div>
+<%# ===== END OF MY CODE ===== %>

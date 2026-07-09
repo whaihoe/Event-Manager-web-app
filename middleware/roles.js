@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * @purpose Checks that the logged in user has the required role
  * @input Required role and user role from the session
@@ -27,3 +28,4 @@ function checkRole(role, req, res, next) {
 module.exports = {
     requireRole,
 };
+// ===== END OF MY CODE =====

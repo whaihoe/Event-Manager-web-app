@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 // These routes handle logging in, registering and logging out.
 
 const express = require('express');
@@ -264,3 +265,4 @@ router.get('/logout', function (req, res) {
 
 // Export the router object so index.js can access it
 module.exports = router;
+// ===== END OF MY CODE =====

@@ -1,3 +1,4 @@
+<%# ===== START OF MY CODE ===== %>
 <% const eventLink = currentUserRole === "organiser" ? `/events/${event.event_id}/edit` : `/events/${event.event_id}`; %>
 <% const isSoldOut = Number(event.total_tickets) > 0 && Number(event.total_tickets_sold) >= Number(event.total_tickets); %>
 <% const availableTicketSummary = event.available_ticket_summary ? event.available_ticket_summary.split(",").join(", ") : ""; %>
@@ -117,3 +118,4 @@
         </div>
     </div>
 </div>
+<%# ===== END OF MY CODE ===== %>

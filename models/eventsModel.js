@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * eventsModel.js
  * I moved the event database code here because routes/events.js was getting too long.
@@ -1316,3 +1317,4 @@ module.exports = {
     createPaidTicketPurchase,
     getPurchaseConfirmation,
 };
+// ===== END OF MY CODE =====

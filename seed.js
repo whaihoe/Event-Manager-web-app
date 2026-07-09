@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 const bcrypt = require('bcrypt');
 
 const seedUsers = [
@@ -122,3 +123,4 @@ function insertNextUser(users) {
 }
 
 module.exports = seedDatabase;
+// ===== END OF MY CODE =====

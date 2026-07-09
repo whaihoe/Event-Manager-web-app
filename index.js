@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * index.js
  * This is the main entry point for my Express app.
@@ -311,3 +312,4 @@ function showServerStartedMessage() {
 
 // Make the web application listen for HTTP requests
 app.listen(port, showServerStartedMessage);
+// ===== END OF MY CODE =====

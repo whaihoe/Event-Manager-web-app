@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * @purpose Checks if the user is logged in before allowing access to a route
  * @input Session userId
@@ -12,3 +13,4 @@ function requireLogin(req, res, next) {
 }
 
 module.exports = requireLogin;
+// ===== END OF MY CODE =====

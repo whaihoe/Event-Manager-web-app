@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 // To build the DB.
 const fs = require('fs');
 const path = require('path');
@@ -29,3 +30,4 @@ db.exec(schema, function (err) {
         console.log('Database built successfully');
     });
 });
+// ===== END OF MY CODE =====

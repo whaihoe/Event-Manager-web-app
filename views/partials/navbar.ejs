@@ -1,3 +1,4 @@
+<%# ===== START OF MY CODE ===== %>
 <nav class="navbar navbar-expand-lg px-4">
     <% if (currentUserId) { %>
         <a class="navbar-brand" href="/<%= currentUserRole %>/home"> <%= settings.site_name %> </a>
@@ -76,7 +77,6 @@
         </div>
     </div>
 <% } %>
-
 <% if (errorMessage) { %>
     <div class="container mt-3">
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -91,3 +91,4 @@
         </div>
     </div>
 <% } %>
+<%# ===== END OF MY CODE ===== %>

@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * events.js
  * These routes handle the organiser and attendee event pages.
@@ -614,3 +615,4 @@ router.post(
 );
 
 module.exports = router;
+// ===== END OF MY CODE =====

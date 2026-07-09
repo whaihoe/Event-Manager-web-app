@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * @purpose Handles clicks on event share buttons
  * @input Browser click event
@@ -60,3 +61,4 @@ function restoreShareButtonText(button, originalText) {
 }
 
 document.addEventListener('click', handleShareLinkClick);
+// ===== END OF MY CODE =====

@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 /**
  * walletModel.js
  * This file keeps the wallet SQL separate from the route code.
@@ -182,3 +183,4 @@ module.exports = {
     addMoneyToWallet,
     createWalletTransaction,
 };
+// ===== END OF MY CODE =====

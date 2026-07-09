@@ -6,6 +6,7 @@ BEGIN TRANSACTION;
 
 -- Create your tables with SQL commands here (watch out for slight syntactical differences with SQLite vs MySQL)
 
+-- ===== START OF MY CODE =====
 CREATE TABLE IF NOT EXISTS users (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_name TEXT NOT NULL,
@@ -86,5 +87,6 @@ CREATE TABLE IF NOT EXISTS purchase_ticket_items (
 
 INSERT OR IGNORE INTO site_settings (setting_id, site_name, site_description)
 VALUES (1, 'Event Manager', 'Discover events and buy tickets online.');
+-- ===== END OF MY CODE =====
 
 COMMIT;

@@ -1,3 +1,4 @@
+// ===== START OF MY CODE =====
 const roleDetails = {
     organiser: {
         ctaText: 'Continue as Organiser',
@@ -111,3 +112,4 @@ function finishRoleUpdate(selectedDetails) {
 }
 
 document.addEventListener('DOMContentLoaded', initialiseRoleSelector);
+// ===== END OF MY CODE =====
