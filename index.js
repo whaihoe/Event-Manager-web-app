@@ -41,7 +41,8 @@ global.db = new sqlite3.Database('./database.db', function (err) {
 });
 
 /**
- * @desc Gets the site name and description
+ * @purpose Gets the site name and description
+ * @input Database callback
  * @output One site_settings row from the database
  */
 function getSiteSettings(callback) {
@@ -55,7 +56,7 @@ function getSiteSettings(callback) {
 }
 
 /**
- * @desc Renders a simple error page instead of plain Express error text
+ * @purpose Renders a simple error page instead of plain Express error text
  * @input Response, status code, page title and message
  * @output Renders views/error.ejs
  */
@@ -67,7 +68,7 @@ function renderErrorPage(res, statusCode, pageTitle, message) {
 }
 
 /**
- * @desc Makes common values available in all EJS pages
+ * @purpose Makes common values available in all EJS pages
  * @input Session values and site settings from the database
  * @output res.locals values which can be used in templates
  */
@@ -92,7 +93,6 @@ app.use(function (req, res, next) {
         }
 
         res.locals.settings = settings;
-        req.settings = settings;
 
         if (!req.session.userId) {
             return next();
@@ -112,17 +112,16 @@ app.use(function (req, res, next) {
 });
 
 /**
- * @desc Handles requests to the main home page
- * @output Renders main-home.ejs with the site settings
+ * @purpose Handles requests to the main home page
+ * @input Browser request
+ * @output Renders index.ejs
  */
 app.get('/', function (req, res) {
-    res.render('index.ejs', {
-        settings: req.settings,
-    });
+    res.render('index.ejs');
 });
 
 /**
- * @desc Sends a logged in user to the correct home page for their role
+ * @purpose Sends a logged in user to the correct home page for their role
  * @input Logged in user's role from the session
  * @output Redirects to organiser or attendee home page
  */
@@ -135,7 +134,7 @@ app.get('/home', requireLogin, function (req, res) {
 });
 
 /**
- * @desc Displays the organiser home page
+ * @purpose Displays the organiser home page
  * @input Organiser id from the session
  * @output Renders organiser-home.ejs with draft and published events
  */
@@ -144,30 +143,31 @@ app.get('/organiser/home', requireLogin, function (req, res) {
         return res.redirect('/attendee/home');
     }
 
-    const sortOption = req.query.sort || "earliest";
+    const sortOption = req.query.sort || 'earliest';
 
-    eventModel.getOrganiserEvents(req.session.userId, sortOption, function (err, events) {
-        if (err) {
-            return res.status(500).send('Could not load events');
-        }   
+    eventModel.getOrganiserEvents(
+        req.session.userId,
+        sortOption,
+        function (err, events) {
+            if (err) {
+                return res.status(500).send('Could not load events');
+            }
 
-        res.render('organiser-home.ejs', {
-            userName: req.session.userName,
-            settings: req.settings,
-            draftEvents: events.filter(function (event) {
-                return event.status === 'draft';
-            }),
-            publishedEvents: events.filter(function (event) {
-                return event.status === 'published';
-            }),
-            role: 'organiser',
-            sortOption: sortOption,
-        });
-    });
+            res.render('organiser-home.ejs', {
+                draftEvents: events.filter(function (event) {
+                    return event.status === 'draft';
+                }),
+                publishedEvents: events.filter(function (event) {
+                    return event.status === 'published';
+                }),
+                sortOption: sortOption,
+            });
+        },
+    );
 });
 
 /**
- * @desc Displays the attendee home page
+ * @purpose Displays the attendee home page
  * @input attendee id from the session
  * @output Renders attendee-home.ejs with published events
  */
@@ -176,21 +176,18 @@ app.get('/attendee/home', requireLogin, function (req, res) {
         return res.redirect('/organiser/home');
     }
 
-    const sortOption = req.query.sort || "earliest";
+    const sortOption = req.query.sort || 'earliest';
 
     eventModel.getPublishedEvents(
         req.session.userId,
         sortOption,
         function (err, events) {
             if (err) {
-                return res.status(500).send("Could not load events");
+                return res.status(500).send('Could not load events');
             }
 
-            res.render("attendee-home.ejs", {
-                userName: req.session.userName,
-                settings: req.settings,
+            res.render('attendee-home.ejs', {
                 publishedEvents: events,
-                role: "attendee",
                 sortOption: sortOption,
             });
         },
@@ -198,7 +195,7 @@ app.get('/attendee/home', requireLogin, function (req, res) {
 });
 
 /**
- * @desc Displays the site settings form
+ * @purpose Displays the site settings form
  * @input Current site settings from the database
  * @output Renders site-settings.ejs with the current values
  */
@@ -209,12 +206,12 @@ app.get('/organiser/settings', requireLogin, function (req, res) {
 
     res.render('site-settings.ejs', {
         errors: {},
-        formData: req.settings,
+        formData: res.locals.settings,
     });
 });
 
 /**
- * @desc Updates the site name and description
+ * @purpose Updates the site name and description
  * @input site_name and site_description from req.body
  * @output Updates the database then redirects to organiser home
  */
@@ -273,7 +270,8 @@ const walletRoutes = require('./routes/wallet');
 app.use('/wallet', walletRoutes);
 
 /**
- * @desc Handles pages that do not match any route
+ * @purpose Handles pages that do not match any route
+ * @input Unmatched browser request
  * @output Shows a simple 404 page
  */
 app.use(function (req, res) {
@@ -286,7 +284,7 @@ app.use(function (req, res) {
 });
 
 /**
- * @desc Handles unexpected server errors
+ * @purpose Handles unexpected server errors
  * @input Error passed from route handlers
  * @output Shows a simple error page
  */
@@ -302,6 +300,14 @@ app.use(function (err, req, res, next) {
 });
 
 // Make the web application listen for HTTP requests
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-});
+/**
+ * @purpose Confirms that the web server has started
+ * @input Configured application port
+ * @output Writes the local server port to the terminal
+ */
+function showServerStartedMessage() {
+    console.log(`Event Manager listening on port ${port}`);
+}
+
+// Make the web application listen for HTTP requests
+app.listen(port, showServerStartedMessage);

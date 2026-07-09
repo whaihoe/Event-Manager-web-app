@@ -343,10 +343,6 @@ h1,
     color: var(--success-hover) !important;
 }
 
-.text-danger {
-    color: var(--danger) !important;
-}
-
 .form-label {
     color: var(--ink);
     font-weight: 800;
@@ -440,7 +436,7 @@ textarea.form-control {
     z-index: 3;
 }
 
-.card{
+.card {
     background-color: var(--surface);
     border-radius: var(--radius-lg);
 }

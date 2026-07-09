@@ -31,9 +31,6 @@
 
 <div class="row g-3">
     <% publishedEvents.forEach(function(event) { %>
-        <%- include("event-card", {
-            event: event,
-            role: role
-        }) %>
+        <%- include("event-card", { event: event }) %>
     <% }) %>
 </div>

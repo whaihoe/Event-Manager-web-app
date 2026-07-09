@@ -1,13 +1,13 @@
 {
     "name": "cm2040-event-manager-coursework",
     "version": "1.0.0",
-    "description": "A template for the mid-term assignment",
+    "description": "An event management app for organisers and attendees",
     "main": "index.js",
     "scripts": {
         "start": "node index.js",
         "build-db": "node scripts/build-db.js",
         "first-start": "npm install && npm run build-db && npm start",
-        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check routes/wallet.js && node --check models/eventsModel.js && node --check models/walletModel.js && node --check middleware/auth.js && node --check middleware/roles.js && node --check seed.js"
+        "test": "node --check index.js && node --check routes/events.js && node --check routes/auth.js && node --check routes/wallet.js && node --check models/eventsModel.js && node --check models/walletModel.js && node --check middleware/auth.js && node --check middleware/roles.js && node --check public/js/remember-scroll.js && node --check public/js/role-selector.js && node --check public/js/share-link.js && node --check scripts/build-db.js && node --check seed.js"
     },
     "author": "Kwok Whai Hoe",
     "license": "ISC",

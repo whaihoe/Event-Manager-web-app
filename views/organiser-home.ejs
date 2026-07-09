@@ -17,7 +17,7 @@
             </p>
 
             <p class="text-muted mb-0 mt-3">
-                Welcome, <%= userName %>. Create and post events for attendees to buy tickets.
+                Welcome, <%= currentUserName %>. Create and post events for attendees to buy tickets.
             </p>
         </section>
 
@@ -75,17 +75,16 @@
 
         <div class="row g-3 mb-5">
             <% draftEvents.forEach(function(event) { %>
-                <%- include("events/partials/event-card", {
-                    event: event,
-                    role: role
-                }) %>
+                <%- include("events/partials/event-card", { event: event }) %>
             <% }) %>
         </div>
 
-        <%- include("events/partials/event-list",{
-            publishedEvents: publishedEvents,
-            role: role
+        <%- include("events/partials/event-list", {
+            publishedEvents: publishedEvents
         }) %>
     </main>
+
+    <script src="/js/share-link.js" defer></script>
+    <script src="/js/remember-scroll.js" defer></script>
 </body>
 </html>

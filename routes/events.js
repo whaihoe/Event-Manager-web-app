@@ -13,7 +13,8 @@ const eventModel = require('../models/eventsModel.js');
 const FIXED_TICKET_TYPES = ['Full price ticket', 'Concession price ticket'];
 
 /**
- * @desc Gets today's date in YYYY-MM-DD format
+ * @purpose Gets today's date in YYYY-MM-DD format
+ * @input Current system date
  * @output Date string in YYYY-MM-DD format
  */
 function getTodayDate() {
@@ -26,7 +27,7 @@ function getTodayDate() {
 }
 
 /**
- * @desc Makes sure repeated ticket form fields are always arrays
+ * @purpose Makes sure repeated ticket form fields are always arrays
  * @input A form value which may be empty, a string or an array
  * @output An array version of the value
  */
@@ -43,7 +44,7 @@ function makeArray(value) {
 }
 
 /**
- * @desc Makes the event ticket rows use my fixed ticket types of full price or concession
+ * @purpose Makes the event ticket rows use my fixed ticket types of full price or concession
  * @input Ticket rows from the form or database
  * @output Two ticket rows for full price and concession tickets
  */
@@ -72,7 +73,7 @@ function getFixedTicketRows(tickets) {
 }
 
 /**
- * @desc Gets ticket data from the submitted form
+ * @purpose Gets ticket data from the submitted form
  * @input Express req object with ticket fields in req.body
  * @output Array of ticket objects from the form
  */
@@ -96,7 +97,7 @@ function getTicketFormData(req) {
 }
 
 /**
- * @desc Validates the ticket rows for an event
+ * @purpose Validates the ticket rows for an event
  * @input Ticket rows from the form
  * @output An errors object and cleaned ticket rows
  */
@@ -124,7 +125,7 @@ function validateTickets(tickets) {
 }
 
 /**
- * @desc Validates the create and edit event forms
+ * @purpose Validates the create and edit event forms
  * @input Express req object with event fields in req.body
  * @output Validation errors, form data and ticket rows
  */
@@ -170,7 +171,7 @@ function validateEventForm(req) {
 }
 
 /**
- * @desc Checks the submitted ticket quantities for an attendee purchase
+ * @purpose Checks the submitted ticket quantities for an attendee purchase
  * @input Tickets from the database and req.body values
  * @output Errors, selected ticket rows and form data
  */
@@ -218,7 +219,7 @@ function validatePurchaseForm(req, tickets) {
 }
 
 /**
- * @desc Shows the attendee event page again when a ticket purchase fails
+ * @purpose Shows the attendee event page again when a ticket purchase fails
  * @input Page data, validation data and error message
  * @output Renders attendee-details.ejs with an error
  */
@@ -234,7 +235,7 @@ function renderPurchaseError(res, pageData, validation, message) {
 }
 
 /**
- * @desc Shows the ticket purchase confirmation page
+ * @purpose Shows the ticket purchase confirmation page
  * @input eventId and purchaseId from the URL, userId from session
  * @output Renders the confirmation page for that attendee's purchase
  */
@@ -266,7 +267,7 @@ router.get(
 );
 
 /**
- * @desc Creates a blank draft event and redirects to its edit page
+ * @purpose Creates a blank draft event and redirects to its edit page
  * @input Logged in organiser session
  * @output Inserts an event and two default ticket rows
  */
@@ -309,7 +310,7 @@ router.post(
 );
 
 /**
- * @desc Publishes a draft event so attendees can see it
+ * @purpose Publishes a draft event so attendees can see it
  * @input eventId from URL and organiser id from session
  * @output Updates the event status then redirects back to edit page
  */
@@ -337,7 +338,7 @@ router.post(
 );
 
 /**
- * @desc Deletes an event owned by the logged in organiser
+ * @purpose Deletes an event owned by the logged in organiser
  * @input eventId from URL and organiser id from session
  * @output Removes the event and redirects to the event list
  */
@@ -361,7 +362,7 @@ router.post(
 );
 
 /**
- * @desc Displays one published event for attendees
+ * @purpose Displays one published event for attendees
  * @input eventId from URL and userId from session
  * @output Renders attendee-details.ejs with event and ticket data
  */
@@ -393,7 +394,7 @@ router.get('/:eventId', requireLogin, function (req, res, next) {
 });
 
 /**
- * @desc Purchases selected tickets for an attendee
+ * @purpose Purchases selected tickets for an attendee
  * @input eventId from URL, attendee name and ticket quantities from req.body
  * @output Saves one purchase with multiple ticket items, then redirects to confirmation page
  */
@@ -469,7 +470,7 @@ router.post(
 );
 
 /**
- * @desc Displays the organiser edit page for one event
+ * @purpose Displays the organiser edit page for one event
  * @input eventId from URL and organiser id from session
  * @output Renders edit.ejs with event, tickets and attendee data
  */
@@ -504,7 +505,7 @@ router.get(
 );
 
 /**
- * @desc Updates an event from the organiser edit page
+ * @purpose Updates an event from the organiser edit page
  * @input eventId from URL, edited event details and ticket rows from req.body
  * @output Updates the event and redirects back to the edit page
  */

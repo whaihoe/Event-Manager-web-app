@@ -22,7 +22,7 @@ const seedUsers = [
 ];
 
 /**
- * @desc Adds default users so the marker can test the app without registering first
+ * @purpose Adds default users so the marker can test the app without registering first
  * @input Existing database tables created from db_schema.sql
  * @output Inserts seed users and makes sure every user has a wallet
  */
@@ -48,7 +48,7 @@ function seedDatabase() {
 }
 
 /**
- * @desc Creates wallets for any users that do not have one yet
+ * @purpose Creates wallets for any users that do not have one yet
  * @input Existing users table
  * @output Inserts missing wallet rows only
  */
@@ -67,7 +67,7 @@ function createMissingWallets() {
 }
 
 /**
- * @desc Inserts each seed user one by one
+ * @purpose Inserts each seed user one by one
  * @input Array of seed user objects
  * @output Inserts users and their wallet rows
  */

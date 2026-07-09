@@ -5,7 +5,7 @@
  */
 
 /**
- * @desc Gets a wallet using the user's id
+ * @purpose Gets a wallet using the user's id
  * @input userId from the logged in session
  * @output One wallet row or undefined if it has not been created yet
  */
@@ -20,7 +20,7 @@ function getWalletByUserId(userId, callback) {
 }
 
 /**
- * @desc Creates a wallet for a user if they do not already have one
+ * @purpose Creates a wallet for a user if they do not already have one
  * @input userId from users table
  * @output The user's wallet row
  */
@@ -40,7 +40,7 @@ function createWalletIfNeeded(userId, callback) {
 }
 
 /**
- * @desc Gets the current wallet balance for a user
+ * @purpose Gets the current wallet balance for a user
  * @input userId from the logged in session
  * @output Number balance from the user's wallet
  */
@@ -55,7 +55,7 @@ function getWalletBalance(userId, callback) {
 }
 
 /**
- * @desc Gets recent wallet transactions for one user
+ * @purpose Gets recent wallet transactions for one user
  * @input userId from the logged in session
  * @output Array of wallet transaction rows
  */
@@ -78,7 +78,7 @@ function getWalletTransactions(userId, callback) {
 }
 
 /**
- * @desc Creates one wallet transaction record
+ * @purpose Creates one wallet transaction record
  * @input Wallet id, type, amount, description and optional purchase id
  * @output Inserts a row into wallet_transactions
  */
@@ -113,7 +113,7 @@ function createWalletTransaction(
 }
 
 /**
- * @desc Adds fake money to a user's wallet and records the top up
+ * @purpose Adds fake money to a user's wallet and records the top up
  * @input userId, amount and description
  * @output Updates the wallet balance and creates a transaction row
  */
@@ -141,7 +141,7 @@ function addTopUpAmount(userId, amount, description, callback) {
 }
 
 /**
- * @desc Removes money from a wallet
+ * @purpose Removes money from a wallet
  * @input walletId and amount to deduct
  * @output Updates the wallet balance if enough money is available
  */
@@ -158,7 +158,7 @@ function deductMoneyFromWallet(walletId, amount, callback) {
 }
 
 /**
- * @desc Adds money to a wallet
+ * @purpose Adds money to a wallet
  * @input walletId and amount to add
  * @output Updates the wallet balance
  */

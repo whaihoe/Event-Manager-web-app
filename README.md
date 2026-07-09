@@ -135,13 +135,12 @@ The main tables are:
 - `site_settings`
 - `events`
 - `event_tickets`
-- `event_attendees`
 - `ticket_purchases`
 - `purchase_ticket_items`
 - `wallets`
 - `wallet_transactions`
 
-I used `ticket_purchases` as the main purchase record, and `purchase_ticket_items` to store the ticket types inside the purchase. This means one purchase can include both full price and concession tickets.
+I used `ticket_purchases` as the main purchase record, and `purchase_ticket_items` to store the ticket types, quantities and original prices inside the purchase. This means one purchase can include both full price and concession tickets, and old purchase totals do not change if a ticket price is edited later.
 
 The `wallets` table stores each user's fake wallet balance. The `wallet_transactions` table records wallet top ups, attendee ticket payments and organiser ticket sale income. Card numbers, expiry dates and CVV values are only used for fake validation and are not stored.
 

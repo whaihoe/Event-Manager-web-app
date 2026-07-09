@@ -1,4 +1,4 @@
-<% const eventLink = role === "organiser" ? `/events/${event.event_id}/edit` : `/events/${event.event_id}`; %>
+<% const eventLink = currentUserRole === "organiser" ? `/events/${event.event_id}/edit` : `/events/${event.event_id}`; %>
 <% const isSoldOut = Number(event.total_tickets) > 0 && Number(event.total_tickets_sold) >= Number(event.total_tickets); %>
 <% const availableTicketSummary = event.available_ticket_summary ? event.available_ticket_summary.split(",").join(", ") : ""; %>
 <% const purchasedTicketSummary = event.purchased_ticket_summary ? event.purchased_ticket_summary.split(",").join(", ") : ""; %>
@@ -62,18 +62,18 @@
                 </p>
             <% } %>
 
-            <% if (role === "attendee" && event.purchased_ticket_summary) { %>
+            <% if (currentUserRole === "attendee" && event.purchased_ticket_summary) { %>
                 <p class="small text-success">
                     Your tickets: <%= purchasedTicketSummary %>
                 </p>
             <% } %>
 
-            <% if (role === "attendee") { %>
+            <% if (currentUserRole === "attendee") { %>
                 <a href="<%= eventLink %>" class="btn btn-primary">
                     View Event
                 </a>
             <% } %>
-            <% if (role === "organiser") { %>
+            <% if (currentUserRole === "organiser") { %>
                 <div class="event-card__actions">
 
                     <a

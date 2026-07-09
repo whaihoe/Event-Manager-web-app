@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS wallet_transactions (
     wallet_transaction_id INTEGER PRIMARY KEY AUTOINCREMENT,
     wallet_id INTEGER NOT NULL,
     transaction_type TEXT NOT NULL CHECK(transaction_type IN ('top_up', 'ticket_payment', 'ticket_sale')),
-    amount REAL NOT NULL CHECK(amount >= 0),
+    amount REAL NOT NULL CHECK(amount > 0),
     description TEXT NOT NULL,
     related_purchase_id INTEGER,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -61,16 +61,8 @@ CREATE TABLE IF NOT EXISTS event_tickets (
     ticket_type TEXT NOT NULL,
     quantity_available INTEGER NOT NULL CHECK(quantity_available > 0),
     price REAL NOT NULL CHECK(price >= 0),
+    UNIQUE (event_id, ticket_type),
     FOREIGN KEY (event_id) REFERENCES events(event_id)
-);
-
-CREATE TABLE IF NOT EXISTS event_attendees (
-    event_id INTEGER NOT NULL,
-    user_id INTEGER NOT NULL,
-    joined_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (event_id, user_id),
-    FOREIGN KEY (event_id) REFERENCES events(event_id),
-    FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
 CREATE TABLE IF NOT EXISTS ticket_purchases (
@@ -84,10 +76,11 @@ CREATE TABLE IF NOT EXISTS ticket_purchases (
 );
 
 CREATE TABLE IF NOT EXISTS purchase_ticket_items (
-    purchase_item_id INTEGER PRIMARY KEY AUTOINCREMENT,
     purchase_id INTEGER NOT NULL,
     ticket_id INTEGER NOT NULL,
     quantity INTEGER NOT NULL CHECK(quantity > 0),
+    price_at_purchase REAL NOT NULL CHECK(price_at_purchase >= 0),
+    PRIMARY KEY (purchase_id, ticket_id),
     FOREIGN KEY (purchase_id) REFERENCES ticket_purchases(purchase_id),
     FOREIGN KEY (ticket_id) REFERENCES event_tickets(ticket_id)
 );

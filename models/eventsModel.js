@@ -7,34 +7,53 @@
 const walletModel = require('./walletModel.js');
 
 /**
- * @desc Runs a function for each item in order
+ * @purpose Runs a function for each item in order
  * @input items array, eachItem function and callback
  * @output Calls callback after every item has finished
  */
 function runEach(items, eachItem, callback) {
     const remainingItems = items.slice();
-
-    function runNextItem() {
-        const item = remainingItems.shift();
-
-        if (!item) {
-            return callback();
-        }
-
-        eachItem(item, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            runNextItem();
-        });
-    }
-
-    runNextItem();
+    runNextItem(remainingItems, eachItem, callback);
 }
 
 /**
- * @desc Gets all events created by one organiser
+ * @purpose Runs the next item from a copied array
+ * @input Remaining items, item handler and final callback
+ * @output Passes one item to the handler or finishes the sequence
+ */
+function runNextItem(remainingItems, eachItem, callback) {
+    const item = remainingItems.shift();
+
+    if (!item) {
+        return callback();
+    }
+
+    eachItem(
+        item,
+        handleRunEachResult.bind(
+            null,
+            remainingItems,
+            eachItem,
+            callback,
+        ),
+    );
+}
+
+/**
+ * @purpose Handles the result after one item has finished
+ * @input Remaining items, item handler, final callback and optional error
+ * @output Stops on an error or starts the next item
+ */
+function handleRunEachResult(remainingItems, eachItem, callback, err) {
+    if (err) {
+        return callback(err);
+    }
+
+    runNextItem(remainingItems, eachItem, callback);
+}
+
+/**
+ * @purpose Gets all events created by one organiser
  * @input organiserId from the logged in session
  * @output An array of event rows with ticket summaries added
  */
@@ -69,7 +88,7 @@ function getOrganiserEvents(organiserId, sortOption, callback) {
 }
 
 /**
- * @desc Gets all published events for attendees
+ * @purpose Gets all published events for attendees
  * @input userId from the logged in attendee session
  * @output An array of published event rows with ticket summaries added
  */
@@ -104,7 +123,7 @@ function getPublishedEvents(userId, sortOption, callback) {
 }
 
 /**
- * @desc Adds ticket totals and purchase text to every event row
+ * @purpose Adds ticket totals and purchase text to every event row
  * @input events array and optional userId
  * @output The same events array with extra fields used by the EJS pages
  */
@@ -125,7 +144,7 @@ function addEventSummaries(events, userId, callback) {
 }
 
 /**
- * @desc Adds ticket totals and attendee count to one event
+ * @purpose Adds ticket totals and attendee count to one event
  * @input One event row and optional userId
  * @output The event row with summary fields for the page cards
  */
@@ -193,14 +212,14 @@ function addEventSummary(event, userId, callback) {
 }
 
 /**
- * @desc Counts how many users joined one event
+ * @purpose Counts how many users purchased tickets for one event
  * @input eventId from the event row
  * @output A number showing the attendee count
  */
 function getAttendeeCount(eventId, callback) {
     const query = `
-        SELECT COUNT(*) AS attendee_count
-        FROM event_attendees
+        SELECT COUNT(DISTINCT user_id) AS attendee_count
+        FROM ticket_purchases
         WHERE event_id = ?
     `;
 
@@ -214,7 +233,7 @@ function getAttendeeCount(eventId, callback) {
 }
 
 /**
- * @desc Gets how many tickets have been sold for one ticket type
+ * @purpose Gets how many tickets have been sold for one ticket type
  * @input ticketId from event_tickets
  * @output A number showing the quantity sold
  */
@@ -235,7 +254,7 @@ function getQuantitySoldForTicket(ticketId, callback) {
 }
 
 /**
- * @desc Gets how many tickets this attendee already bought for one ticket type
+ * @purpose Gets how many tickets this attendee already bought for one ticket type
  * @input ticketId and userId
  * @output A number showing the quantity bought by the logged in attendee
  */
@@ -259,7 +278,7 @@ function getQuantityBoughtForTicket(ticketId, userId, callback) {
 }
 
 /**
- * @desc Gets all ticket rows for one event and adds the sold count
+ * @purpose Gets all ticket rows for one event and adds the sold count
  * @input eventId from the selected event
  * @output Array of ticket rows with quantity_sold added
  */
@@ -300,7 +319,7 @@ function getTicketsForEvent(eventId, callback) {
 }
 
 /**
- * @desc Gets tickets for the attendee booking page
+ * @purpose Gets tickets for the attendee booking page
  * @input eventId and userId
  * @output Array of ticket rows with quantity_sold and quantity_bought added
  */
@@ -338,7 +357,7 @@ function getTicketsForAttendee(eventId, userId, callback) {
 }
 
 /**
- * @desc Gets a published event with its ticket rows for the attendee page
+ * @purpose Gets a published event with its ticket rows for the attendee page
  * @input eventId from URL and userId from session
  * @output Event and tickets used by attendee-details.ejs
  */
@@ -366,7 +385,7 @@ function getAttendeeEventDetails(eventId, userId, callback) {
 }
 
 /**
- * @desc Gets one organiser event with tickets and attendees for the edit page
+ * @purpose Gets one organiser event with tickets and attendees for the edit page
  * @input eventId and organiserId
  * @output Event, ticket rows and attendees
  */
@@ -401,46 +420,71 @@ function getOrganiserEventDetails(eventId, organiserId, callback) {
 }
 
 /**
- * @desc Adds ticket records after an event has been created
+ * @purpose Adds ticket records after an event has been created
  * @input eventId and array of ticket objects
  * @output Calls callback after all tickets are inserted
  */
 function addEventTickets(eventId, tickets, callback) {
     const ticketsToAdd = tickets.slice();
-
-    function addNextTicket() {
-        const ticket = ticketsToAdd.shift();
-
-        if (!ticket) {
-            return callback();
-        }
-
-        const query = `
-            INSERT INTO event_tickets (event_id, ticket_type, quantity_available, price)
-            VALUES (?, ?, ?, ?)
-        `;
-
-        const query_parameters = [
-            eventId,
-            ticket.ticket_type,
-            ticket.quantity_available,
-            ticket.price,
-        ];
-
-        global.db.run(query, query_parameters, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            addNextTicket();
-        });
-    }
-
-    addNextTicket();
+    addNextEventTicket(eventId, ticketsToAdd, callback);
 }
 
 /**
- * @desc Inserts the main event row into the events table
+ * @purpose Inserts the next ticket while an event is being created
+ * @input Event id, remaining tickets and final callback
+ * @output Inserts one ticket or finishes when no tickets remain
+ */
+function addNextEventTicket(eventId, ticketsToAdd, callback) {
+    const ticket = ticketsToAdd.shift();
+
+    if (!ticket) {
+        return callback();
+    }
+
+    const query = `
+        INSERT INTO event_tickets (event_id, ticket_type, quantity_available, price)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    const query_parameters = [
+        eventId,
+        ticket.ticket_type,
+        ticket.quantity_available,
+        ticket.price,
+    ];
+
+    global.db.run(
+        query,
+        query_parameters,
+        handleAddEventTicketResult.bind(
+            null,
+            eventId,
+            ticketsToAdd,
+            callback,
+        ),
+    );
+}
+
+/**
+ * @purpose Handles the result after one event ticket is inserted
+ * @input Event id, remaining tickets, final callback and optional error
+ * @output Stops on an error or inserts the next ticket
+ */
+function handleAddEventTicketResult(
+    eventId,
+    ticketsToAdd,
+    callback,
+    err,
+) {
+    if (err) {
+        return callback(err);
+    }
+
+    addNextEventTicket(eventId, ticketsToAdd, callback);
+}
+
+/**
+ * @purpose Inserts the main event row into the events table
  * @input Event form data and organiserId
  * @output The new event id from SQLite
  */
@@ -468,7 +512,7 @@ function createEvent(eventData, organiserId, callback) {
 }
 
 /**
- * @desc Creates an event and adds its two ticket rows
+ * @purpose Creates an event and adds its two ticket rows
  * @input Event form data, organiserId and ticket rows
  * @output The new event id
  */
@@ -489,7 +533,7 @@ function createEventWithTickets(eventData, organiserId, tickets, callback) {
 }
 
 /**
- * @desc Publishes a draft event that belongs to the logged in organiser
+ * @purpose Publishes a draft event that belongs to the logged in organiser
  * @input eventId from URL and organiserId from session
  * @output Updates the event status and timestamp
  */
@@ -508,7 +552,7 @@ function publishEvent(eventId, organiserId, callback) {
 }
 
 /**
- * @desc Deletes the event and the rows linked to it
+ * @purpose Deletes the event and the rows linked to it
  * @input eventId from URL and organiserId from session
  * @output Removes the event from the database
  */
@@ -527,16 +571,6 @@ function deleteEvent(eventId, organiserId, callback) {
                 FROM events
                 WHERE organiser_id = ?
             )
-        )
-    `;
-
-    const deleteAttendeesQuery = `
-        DELETE FROM event_attendees
-        WHERE event_id = ?
-        AND event_id IN (
-            SELECT event_id
-            FROM events
-            WHERE organiser_id = ?
         )
     `;
 
@@ -586,28 +620,22 @@ function deleteEvent(eventId, organiserId, callback) {
             return callback(err);
         }
 
-        global.db.run(deleteAttendeesQuery, query_parameters, function (err) {
+        global.db.run(deletePurchaseItemsQuery, query_parameters, function (err) {
             if (err) {
                 return callback(err);
             }
 
-            global.db.run(deletePurchaseItemsQuery, query_parameters, function (err) {
+            global.db.run(deletePurchasesQuery, query_parameters, function (err) {
                 if (err) {
                     return callback(err);
                 }
 
-                global.db.run(deletePurchasesQuery, query_parameters, function (err) {
+                global.db.run(deleteTicketsQuery, query_parameters, function (err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    global.db.run(deleteTicketsQuery, query_parameters, function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        global.db.run(deleteEventQuery, query_parameters, callback);
-                    });
+                    global.db.run(deleteEventQuery, query_parameters, callback);
                 });
             });
         });
@@ -615,7 +643,7 @@ function deleteEvent(eventId, organiserId, callback) {
 }
 
 /**
- * @desc Gets one published event for the attendee event page
+ * @purpose Gets one published event for the attendee event page
  * @input eventId from URL
  * @output One event row or undefined if it is not found
  */
@@ -633,7 +661,7 @@ function getPublishedEventById(eventId, callback) {
 }
 
 /**
- * @desc Gets one event only if it belongs to the logged in organiser
+ * @purpose Gets one event only if it belongs to the logged in organiser
  * @input eventId from URL and organiserId from session
  * @output One event row for the edit page
  */
@@ -666,7 +694,7 @@ function getOrganiserEventById(eventId, organiserId, callback) {
 }
 
 /**
- * @desc Gets all attendees for one event
+ * @purpose Gets all attendees for one event
  * @input eventId from the organiser edit page
  * @output Array of attendee rows with ticket summary text added
  */
@@ -676,11 +704,14 @@ function getAttendeesForEvent(eventId, callback) {
             users.user_id,
             users.user_name,
             users.email_address,
-            event_attendees.joined_at
-        FROM event_attendees
+            MIN(ticket_purchases.purchased_at) AS joined_at
+        FROM ticket_purchases
         JOIN users
-        ON event_attendees.user_id = users.user_id
-        WHERE event_attendees.event_id = ?
+        ON ticket_purchases.user_id = users.user_id
+        WHERE ticket_purchases.event_id = ?
+        GROUP BY users.user_id,
+                 users.user_name,
+                 users.email_address
         ORDER BY users.user_name ASC
     `;
 
@@ -720,7 +751,7 @@ function getAttendeesForEvent(eventId, callback) {
 }
 
 /**
- * @desc Updates the main event details
+ * @purpose Updates the main event details
  * @input eventId, organiserId and edited form data
  * @output Updates the event row in the database
  */
@@ -749,80 +780,91 @@ function updateEvent(eventId, organiserId, eventData, callback) {
 }
 
 /**
- * @desc Updates or inserts ticket rows for an event
+ * @purpose Updates or inserts ticket rows for an event
  * @input eventId and array of ticket rows from the form
  * @output Saves the ticket changes to the database
  */
 function saveEventTickets(eventId, tickets, callback) {
     const ticketsToSave = tickets.slice();
+    saveNextEventTicket(eventId, ticketsToSave, callback);
+}
 
-    function saveNextTicket() {
-        const ticket = ticketsToSave.shift();
+/**
+ * @purpose Saves the next ticket from an event edit form
+ * @input Event id, remaining ticket rows and final callback
+ * @output Updates or inserts one ticket, or finishes the sequence
+ */
+function saveNextEventTicket(eventId, ticketsToSave, callback) {
+    const ticket = ticketsToSave.shift();
 
-        if (!ticket) {
-            return callback();
-        }
-
-        let query;
-        let query_parameters;
-
-        if (ticket.ticket_id) {
-            query = `
-                UPDATE event_tickets
-                SET ticket_type = ?, quantity_available = ?, price = ?
-                WHERE ticket_id = ?
-                AND event_id = ?
-            `;
-
-            query_parameters = [
-                ticket.ticket_type,
-                ticket.quantity_available,
-                ticket.price,
-                ticket.ticket_id,
-                eventId,
-            ];
-        } else {
-            query = `
-                INSERT INTO event_tickets (event_id, ticket_type, quantity_available, price)
-                VALUES (?, ?, ?, ?)
-            `;
-
-            query_parameters = [
-                eventId,
-                ticket.ticket_type,
-                ticket.quantity_available,
-                ticket.price,
-            ];
-        }
-
-        global.db.run(query, query_parameters, function (err) {
-            if (err) {
-                return callback(err);
-            }
-
-            saveNextTicket();
-        });
+    if (!ticket) {
+        return callback();
     }
 
-    saveNextTicket();
+    let query;
+    let query_parameters;
+
+    if (ticket.ticket_id) {
+        query = `
+            UPDATE event_tickets
+            SET ticket_type = ?, quantity_available = ?, price = ?
+            WHERE ticket_id = ?
+            AND event_id = ?
+        `;
+
+        query_parameters = [
+            ticket.ticket_type,
+            ticket.quantity_available,
+            ticket.price,
+            ticket.ticket_id,
+            eventId,
+        ];
+    } else {
+        query = `
+            INSERT INTO event_tickets (event_id, ticket_type, quantity_available, price)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        query_parameters = [
+            eventId,
+            ticket.ticket_type,
+            ticket.quantity_available,
+            ticket.price,
+        ];
+    }
+
+    global.db.run(
+        query,
+        query_parameters,
+        handleSaveEventTicketResult.bind(
+            null,
+            eventId,
+            ticketsToSave,
+            callback,
+        ),
+    );
 }
 
 /**
- * @desc Records the attendee as joined for the event
- * @input eventId and userId
- * @output Inserts into event_attendees if it does not exist yet
+ * @purpose Handles the result after one event ticket is saved
+ * @input Event id, remaining ticket rows, final callback and optional error
+ * @output Stops on an error or saves the next ticket
  */
-function addAttendee(eventId, userId, callback) {
-    const query = `
-        INSERT OR IGNORE INTO event_attendees (event_id, user_id)
-        VALUES (?, ?)
-    `;
+function handleSaveEventTicketResult(
+    eventId,
+    ticketsToSave,
+    callback,
+    err,
+) {
+    if (err) {
+        return callback(err);
+    }
 
-    global.db.run(query, [eventId, userId], callback);
+    saveNextEventTicket(eventId, ticketsToSave, callback);
 }
 
 /**
- * @desc Creates a paid ticket purchase and transfers fake wallet money
+ * @purpose Creates a paid ticket purchase and transfers fake wallet money
  * @input eventId, userId, attendee name and selected tickets
  * @output The new purchase id if the wallet payment succeeds
  */
@@ -875,7 +917,7 @@ function createPaidTicketPurchase(
 }
 
 /**
- * @desc Rolls back the ticket purchase if any payment step fails
+ * @purpose Rolls back the ticket purchase if any payment step fails
  * @input Error from the failed step and final callback
  * @output Rolls back the database transaction
  */
@@ -886,7 +928,7 @@ function rollbackPurchase(err, callback) {
 }
 
 /**
- * @desc Loads the event and checks the ticket prices for a purchase
+ * @purpose Loads the event and checks the ticket prices for a purchase
  * @input eventId, attendee userId and selected tickets from the form
  * @output Data needed to save the purchase
  */
@@ -914,6 +956,15 @@ function getPurchasePaymentData(eventId, userId, selectedTickets, callback) {
                 return callback(paymentDetails.error);
             }
 
+            if (paymentDetails.totalPrice === 0) {
+                return callback(null, {
+                    attendeeWallet: null,
+                    organiserWallet: null,
+                    selectedTickets: paymentDetails.selectedTickets,
+                    totalPrice: 0,
+                });
+            }
+
             getWalletsForPurchase(
                 userId,
                 event.organiser_id,
@@ -925,7 +976,7 @@ function getPurchasePaymentData(eventId, userId, selectedTickets, callback) {
 }
 
 /**
- * @desc Gets both wallets and checks balance if the booking is not free
+ * @purpose Gets both wallets and checks balance if the booking is not free
  * @input Attendee id, organiser id and calculated payment details
  * @output Payment data with attendee and organiser wallet rows
  */
@@ -966,7 +1017,7 @@ function getWalletsForPurchase(
 }
 
 /**
- * @desc Creates a small error with a code used by the route
+ * @purpose Creates a small error with a code used by the route
  * @input Error code string
  * @output Error object
  */
@@ -977,7 +1028,7 @@ function makePaymentError(code) {
 }
 
 /**
- * @desc Rechecks ticket availability and works out the total price
+ * @purpose Rechecks ticket availability and works out the total price
  * @input Ticket rows from the database and selected tickets from the form
  * @output Selected ticket rows with database prices and total price
  */
@@ -1019,7 +1070,7 @@ function checkTicketPayment(tickets, selectedTickets) {
 }
 
 /**
- * @desc Saves purchase rows and records the wallet side of the booking
+ * @purpose Saves purchase rows and records the wallet side of the booking
  * @input Purchase details, wallets and total price
  * @output New purchase id after all related rows are saved
  */
@@ -1033,102 +1084,61 @@ function savePurchaseRows(
     totalPrice,
     callback,
 ) {
-    addAttendee(eventId, userId, function (err) {
-        if (err) {
-            return callback(err);
-        }
+    const purchaseQuery = `
+        INSERT INTO ticket_purchases (event_id, user_id, attendee_name)
+        VALUES (?, ?, ?)
+    `;
 
-        const purchaseQuery = `
-            INSERT INTO ticket_purchases (event_id, user_id, attendee_name)
-            VALUES (?, ?, ?)
-        `;
-
-        global.db.run(
-            purchaseQuery,
-            [eventId, userId, attendeeName],
-            function (err) {
-                if (err) {
-                    return callback(err);
-                }
-
-                const purchaseId = this.lastID;
-
-                runEach(
-                    selectedTickets,
-                    function (ticket, done) {
-                        const itemQuery = `
-                            INSERT INTO purchase_ticket_items (purchase_id, ticket_id, quantity)
-                            VALUES (?, ?, ?)
-                        `;
-
-                        global.db.run(
-                            itemQuery,
-                            [purchaseId, ticket.ticket_id, ticket.quantity],
-                            done,
-                        );
-                    },
-                    function (err) {
-                        if (err) {
-                            return callback(err);
-                        }
-
-                        if (totalPrice === 0) {
-                            return recordFreeTicketTransactions(
-                                attendeeWallet,
-                                organiserWallet,
-                                purchaseId,
-                                callback,
-                            );
-                        }
-
-                        transferWalletMoney(
-                            attendeeWallet,
-                            organiserWallet,
-                            totalPrice,
-                            purchaseId,
-                            callback,
-                        );
-                    },
-                );
-            },
-        );
-    });
-}
-
-/**
- * @desc Records a free booking in both wallets without changing balances
- * @input Attendee wallet, organiser wallet and purchase id
- * @output Creates two zero amount wallet transaction rows
- */
-function recordFreeTicketTransactions(
-    attendeeWallet,
-    organiserWallet,
-    purchaseId,
-    callback,
-) {
-    walletModel.createWalletTransaction(
-        attendeeWallet.wallet_id,
-        'ticket_payment',
-        0,
-        'Free ticket booking',
-        purchaseId,
+    global.db.run(
+        purchaseQuery,
+        [eventId, userId, attendeeName],
         function (err) {
             if (err) {
                 return callback(err);
             }
 
-            walletModel.createWalletTransaction(
-                organiserWallet.wallet_id,
-                'ticket_sale',
-                0,
-                'Free ticket booking received',
-                purchaseId,
+            const purchaseId = this.lastID;
+
+            runEach(
+                selectedTickets,
+                function (ticket, done) {
+                    const itemQuery = `
+                        INSERT INTO purchase_ticket_items (
+                            purchase_id,
+                            ticket_id,
+                            quantity,
+                            price_at_purchase
+                        )
+                        VALUES (?, ?, ?, ?)
+                    `;
+
+                    global.db.run(
+                        itemQuery,
+                        [
+                            purchaseId,
+                            ticket.ticket_id,
+                            ticket.quantity,
+                            ticket.price,
+                        ],
+                        done,
+                    );
+                },
                 function (err) {
                     if (err) {
                         return callback(err);
                     }
 
-                    callback(null, purchaseId);
+                    if (totalPrice === 0) {
+                        return callback(null, purchaseId);
+                    }
+
+                    transferWalletMoney(
+                        attendeeWallet,
+                        organiserWallet,
+                        totalPrice,
+                        purchaseId,
+                        callback,
+                    );
                 },
             );
         },
@@ -1136,7 +1146,7 @@ function recordFreeTicketTransactions(
 }
 
 /**
- * @desc Moves fake money from attendee wallet to organiser wallet
+ * @purpose Moves fake money from attendee wallet to organiser wallet
  * @input Attendee wallet, organiser wallet, amount and purchase id
  * @output Updates balances and creates transaction records
  */
@@ -1201,7 +1211,7 @@ function transferWalletMoney(
 }
 
 /**
- * @desc Gets the total tickets bought by one attendee for one event
+ * @purpose Gets the total tickets bought by one attendee for one event
  * @input eventId and userId
  * @output Array of ticket rows grouped by ticket type
  */
@@ -1226,7 +1236,7 @@ function getPurchasesForUserAndEvent(eventId, userId, callback) {
 }
 
 /**
- * @desc Gets a purchase confirmation record for the logged in attendee
+ * @purpose Gets a purchase confirmation record for the logged in attendee
  * @input purchaseId, eventId and userId
  * @output One purchase with event details and all ticket items
  */
@@ -1262,16 +1272,15 @@ function getPurchaseConfirmation(purchaseId, eventId, userId, callback) {
 
             const itemsQuery = `
                 SELECT
-                    purchase_ticket_items.purchase_item_id,
                     purchase_ticket_items.ticket_id,
                     purchase_ticket_items.quantity,
                     event_tickets.ticket_type,
-                    event_tickets.price
+                    purchase_ticket_items.price_at_purchase AS price
                 FROM purchase_ticket_items
                 JOIN event_tickets
                 ON purchase_ticket_items.ticket_id = event_tickets.ticket_id
                 WHERE purchase_ticket_items.purchase_id = ?
-                ORDER BY purchase_ticket_items.purchase_item_id ASC
+                ORDER BY purchase_ticket_items.ticket_id ASC
             `;
 
             global.db.all(itemsQuery, [purchaseId], function (err, tickets) {

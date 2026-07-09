@@ -1,5 +1,5 @@
 /**
- * @desc Checks if the user is logged in before allowing access to a route
+ * @purpose Checks if the user is logged in before allowing access to a route
  * @input Session userId
  * @output Continues to the route or redirects to login
  */

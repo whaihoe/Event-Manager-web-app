@@ -17,15 +17,16 @@
             </p>
 
             <p class="text-muted mb-0 mt-3">
-                Welcome, <%= userName %>. Browse available events and buy tickets for the ones you are interested in.
+                Welcome, <%= currentUserName %>. Browse available events and buy tickets for the ones you are interested in.
             </p>
         </section>
 
 
-        <%- include("events/partials/event-list",{
-            publishedEvents: publishedEvents,
-            role: role
+        <%- include("events/partials/event-list", {
+            publishedEvents: publishedEvents
         }) %>
     </main>
+
+    <script src="/js/share-link.js" defer></script>
 </body>
 </html>

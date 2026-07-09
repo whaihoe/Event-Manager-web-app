@@ -10,7 +10,7 @@ const requireLogin = require('../middleware/auth.js');
 const walletModel = require('../models/walletModel.js');
 
 /**
- * @desc Checks a card number using the Luhn algorithm
+ * @purpose Checks a card number using the Luhn algorithm
  * @input Card number from the fake payment form
  * @output true if the number passes the Luhn check
  */
@@ -43,7 +43,7 @@ function isValidLuhn(cardNumber) {
 }
 
 /**
- * @desc Checks that the fake card expiry has not passed
+ * @purpose Checks that the fake card expiry has not passed
  * @input Expiry value in YYYY-MM, MM/YY or MM/YYYY format
  * @output true if the expiry month is this month or later
  */
@@ -80,7 +80,7 @@ function isValidExpiry(expiry) {
 }
 
 /**
- * @desc Checks that the fake CVV is three digits
+ * @purpose Checks that the fake CVV is three digits
  * @input CVV from the fake payment form
  * @output true if the CVV is in the expected format
  */
@@ -89,7 +89,7 @@ function isValidCvv(cvv) {
 }
 
 /**
- * @desc Renders the wallet page with the latest balance and transactions
+ * @purpose Renders the wallet page with the latest balance and transactions
  * @input Logged in user id from the session
  * @output Renders wallet/index.ejs
  */
@@ -111,7 +111,7 @@ function renderWalletPage(req, res, errors, formData) {
 }
 
 /**
- * @desc Shows the logged in user's wallet page
+ * @purpose Shows the logged in user's wallet page
  * @input Logged in user session
  * @output Wallet balance, top up form and recent transactions
  */
@@ -120,7 +120,7 @@ router.get('/', requireLogin, function (req, res) {
 });
 
 /**
- * @desc Adds fake money to the user's wallet after validating card details
+ * @purpose Adds fake money to the user's wallet after validating card details
  * @input Amount and fake card details from req.body
  * @output Updates the wallet then redirects back to the wallet page
  */

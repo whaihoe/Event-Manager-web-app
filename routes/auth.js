@@ -7,7 +7,7 @@ const walletModel = require('../models/walletModel.js');
 const VALID_ROLES = ['organiser', 'attendee'];
 
 /**
- * @desc Validates if the email is in a valid format
+ * @purpose Validates if the email is in a valid format
  * @input Email address string
  * @output true if the email format looks valid
  */
@@ -16,7 +16,7 @@ function isValidEmail(emailAddress) {
 }
 
 /**
- * @desc Keeps the form values after an error
+ * @purpose Keeps the form values after an error
  * @input Express req object with form fields
  * @output Form data object for EJS
  */
@@ -29,7 +29,7 @@ function getFormData(req) {
 }
 
 /**
- * @desc Renders the login page with any errors
+ * @purpose Renders the login page with any errors
  * @input Express res, errors and formData
  * @output Renders auth/login.ejs
  */
@@ -41,7 +41,7 @@ function renderLogin(res, errors, formData) {
 }
 
 /**
- * @desc Renders the register page with any errors
+ * @purpose Renders the register page with any errors
  * @input Express res, errors and formData
  * @output Renders auth/register.ejs
  */
@@ -57,23 +57,25 @@ function renderRegister(res, errors, formData) {
 }
 
 /**
- * @desc Displays the login form
+ * @purpose Displays the login form
+ * @input Browser request
  * @output Renders the login page
  */
-router.get('/login', (req, res) => {
+router.get('/login', function (req, res) {
     renderLogin(res);
 });
 
 /**
- * @desc Displays the register form
+ * @purpose Displays the register form
+ * @input Browser request
  * @output Renders the register page
  */
-router.get('/register', (req, res) => {
+router.get('/register', function (req, res) {
     renderRegister(res);
 });
 
 /**
- * @desc Registers a new user account with a role
+ * @purpose Registers a new user account with a role
  * @input Name, email, password and role from req.body
  * @output Creates a user and redirects to the correct home page
  */
@@ -169,7 +171,7 @@ router.post('/register', async function (req, res, next) {
 });
 
 /**
- * @desc Logs in a user using email and password
+ * @purpose Logs in a user using email and password
  * @input Email and password from req.body
  * @output Saves user details in the session if login is successful
  */
@@ -245,7 +247,7 @@ router.post('/login', function (req, res, next) {
 });
 
 /**
- * @desc Logs the user out and clears the session
+ * @purpose Logs the user out and clears the session
  * @input Current session
  * @output Destroys the session and redirects to login
  */
